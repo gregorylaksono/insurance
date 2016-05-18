@@ -1,0 +1,9 @@
+@import "addons.scss";
+@import "insurance.scss";
+
+/* This file prefixes all rules with the theme name to avoid causing conflicts with other themes. */
+/* The actual styles should be defined in insurance.scss */
+.insurance {
+  @include addons;
+  @include insurance;
+}
