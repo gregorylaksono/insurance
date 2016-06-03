@@ -1,10 +1,19 @@
 package com.act.login;
 
-import com.act.main.Main;
+import java.util.LinkedHashMap;
+
+import org.ksoap2.serialization.SoapObject;
+
+import com.act.insurance.InsuranceUI;
+import com.act.main.CommodityInsuranceTab;
+import com.act.util.CallSOAPAction;
+import com.act.util.CallSOAPAction.ISOAPResultCallBack;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.FormLayout;
 import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.Notification;
+import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.PasswordField;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.UI;
@@ -20,6 +29,47 @@ public class LoginPage extends VerticalLayout {
 	 */
 	private static final long serialVersionUID = -5993298903068017656L;
 	
+	private ClickListener loginListener = new ClickListener() {
+		
+		@Override
+		public void buttonClick(ClickEvent event) {
+			String sEmail = email.getValue().trim();
+			String sPassword  = password.getValue().trim();
+			
+			if(sEmail.isEmpty() || sPassword.isEmpty()){
+				Notification.show("Please input email and pasword", Type.ERROR_MESSAGE);
+				return;
+			}
+			
+			LinkedHashMap<String, Object> m = new LinkedHashMap<>();
+			m.put("username", sEmail);
+			m.put("password", sPassword);
+			
+			ISOAPResultCallBack callback = new ISOAPResultCallBack() {
+				
+				@Override
+				public void handleResult(SoapObject data) {
+					String sessionId = data.getProperty("sessionId").toString();
+					((InsuranceUI)UI.getCurrent()).setSessionId(sessionId);
+					((InsuranceUI)UI.getCurrent()).setInsidePage(new CommodityInsuranceTab());
+					
+				}
+				
+				@Override
+				public void handleError() {
+					
+				}
+			};
+			
+			new CallSOAPAction(m, "login",callback );
+			
+		}
+	};
+
+	private PasswordField password;
+
+	private TextField email;
+	
 	public LoginPage(){
 		setHeight(120, Unit.PIXELS);
 		setWidth(300, Unit.PIXELS);
@@ -29,8 +79,8 @@ public class LoginPage extends VerticalLayout {
 	private void createContents() {
 		FormLayout form = new FormLayout();
 		
-		TextField email = new TextField("Email");
-		PasswordField password = new PasswordField("Password");
+		email = new TextField("Email");
+		password = new PasswordField("Password");
 		
 		email.setWidth(100, Unit.PERCENTAGE);
 		password.setWidth(100, Unit.PERCENTAGE);
@@ -62,13 +112,7 @@ public class LoginPage extends VerticalLayout {
 		
 		//--------------------------------------------------
 		
-		login.addClickListener(new ClickListener() {
-			
-			@Override
-			public void buttonClick(ClickEvent event) {
-				UI.getCurrent().setContent(new Main());
-			}
-		});
+		login.addClickListener(loginListener);
 	}
 
 }
