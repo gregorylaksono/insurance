@@ -73,17 +73,8 @@ public class CommodityInsuranceTab extends VerticalLayout {
 	}
 
 	private void createContents() {
-		
-		Component userProfile = createUserComponent();
-		((InsuranceUI)UI.getCurrent()).setHeader(userProfile);
-		//--------------------------------------------
 		Component commodityComponent = createCommodityComponent();
-		
-		addComponent(userProfile);
-		addComponent(commodityComponent);
-		
-		setExpandRatio(userProfile, 0.0f);
-		setExpandRatio(commodityComponent, 1.0f);
+		addComponent(commodityComponent);		
 	}
 
 	private Component createCommodityComponent() {
@@ -124,6 +115,7 @@ public class CommodityInsuranceTab extends VerticalLayout {
 	private VerticalLayout createCommodityFormDetail(Object itemId){
 		VerticalLayout root = new VerticalLayout();
 		root.setMargin(true);
+		root.setSizeFull();
 		//---------------------------------------
 		HorizontalLayout main = Factory.getHorizontalLayoutTemplateFull();
 		main.setSpacing(true);
@@ -271,7 +263,7 @@ public class CommodityInsuranceTab extends VerticalLayout {
 		ISOAPResultCallBack callBack = new ISOAPResultCallBack() {
 			
 			@Override
-			public void handleResult(SoapObject data) {
+			public void handleResult(SoapObject data,  String StatusCode) {
 				for(int i=0; i<data.getPropertyCount(); i++){
 					data.getAttribute("");
 				}
@@ -279,7 +271,7 @@ public class CommodityInsuranceTab extends VerticalLayout {
 			}
 			
 			@Override
-			public void handleError() {
+			public void handleError( String StatusCode) {
 				
 			}
 		};
@@ -288,34 +280,5 @@ public class CommodityInsuranceTab extends VerticalLayout {
 
 	}
 
-	private Component createUserComponent() {
-		VerticalLayout main = new VerticalLayout();
-		MarginInfo info = new MarginInfo(true);
-		info.setMargins(false, true, false, false);
-		main.setMargin(info);
-		main.setWidth(100, Unit.PERCENTAGE);
-		main.setHeight(null);
-		//----------------------------------------				
-		VerticalLayout layout = new VerticalLayout();
-		layout.setWidth(null);
-		layout.setHeight(50, Unit.PIXELS);
-		layout.setSpacing(true);
-		
-		Label name = new Label("<b>Gregory Laksono</b>");
-		Label username = new Label("<i>greg.laksono@gmail.com</i>");
-		Label company = new Label("<i>ACT</i>");
-		
-		name.setContentMode(ContentMode.HTML);
-		username.setContentMode(ContentMode.HTML);
-		company.setContentMode(ContentMode.HTML);
-		
-		layout.addComponent(name);
-		layout.addComponent(username);
-		layout.addComponent(company);
-		//----------------------------------------				
-		main.addComponent(layout);
-		main.setComponentAlignment(layout, Alignment.TOP_RIGHT);
-		return main;
-	}
 
 }

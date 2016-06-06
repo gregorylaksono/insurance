@@ -6,10 +6,13 @@ import org.ksoap2.serialization.SoapObject;
 
 import com.act.insurance.InsuranceUI;
 import com.act.main.CommodityInsuranceTab;
+import com.act.main.Main;
+import com.act.main.UserHeaderComponent;
 import com.act.util.CallSOAPAction;
 import com.act.util.CallSOAPAction.ISOAPResultCallBack;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
+import com.vaadin.ui.Component;
 import com.vaadin.ui.FormLayout;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Notification;
@@ -48,15 +51,19 @@ public class LoginPage extends VerticalLayout {
 			ISOAPResultCallBack callback = new ISOAPResultCallBack() {
 				
 				@Override
-				public void handleResult(SoapObject data) {
+				public void handleResult(SoapObject data,  String StatusCode) {
+					Component userProfile = new UserHeaderComponent();
+					((InsuranceUI)UI.getCurrent()).setHeader(userProfile);
+					//-----------------------------------------------------
 					String sessionId = data.getProperty("sessionId").toString();
 					((InsuranceUI)UI.getCurrent()).setSessionId(sessionId);
-					((InsuranceUI)UI.getCurrent()).setInsidePage(new CommodityInsuranceTab());
+					//-----------------------------------------------------					
+					((InsuranceUI)UI.getCurrent()).setInsidePage(new Main());
 					
 				}
 				
 				@Override
-				public void handleError() {
+				public void handleError( String StatusCode) {
 					
 				}
 			};

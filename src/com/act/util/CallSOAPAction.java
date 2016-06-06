@@ -51,24 +51,25 @@ public class CallSOAPAction {
 
 			httpTransport.call("http://service.act.de/"+method_name, envelope);
 			Object o = envelope.bodyIn;
+			String statusCode = "Cannot connect to host server";
 			if(o instanceof SoapObject){
 				SoapObject getCommodityResponse = (SoapObject) o;
 				if (getCommodityResponse != null) {
 					SoapObject ActernityResponse = (SoapObject) getCommodityResponse
 							.getProperty(0);
 					
-					String statusCode = ActernityResponse.getProperty("code")
+					statusCode = ActernityResponse.getProperty("code")
 							.toString();
 					if (statusCode.equalsIgnoreCase(SUCCESS_CODE)) {
 						SoapObject data = (SoapObject) ActernityResponse
 								.getProperty("data");
-						callBack.handleResult(data);					
+						callBack.handleResult(data,statusCode);					
 					}else{
-						callBack.handleError();
+						callBack.handleError(statusCode);
 					}
 				}
 			}else{
-				callBack.handleError();
+				callBack.handleError(statusCode);
 			}
 
 		} catch (IOException e) {
@@ -81,8 +82,8 @@ public class CallSOAPAction {
 	}
 	
 	public interface ISOAPResultCallBack{
-		public void handleResult(SoapObject data);
-		public void handleError();
+		public void handleResult(SoapObject data, String statusCode);
+		public void handleError(String statusCode);
 	}
 	
 }

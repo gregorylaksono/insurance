@@ -17,7 +17,10 @@ public class Main extends VerticalLayout {
 
 	private void createContents() {
 		TabSheet main = new TabSheet();
+		main.setSizeFull();
 		main.addTab(new CommodityInsuranceTab(),"Insurance");
+		main.addTab(new CommodityTab(),"Commodity");
 		
+		addComponent(main);
 	}
 }

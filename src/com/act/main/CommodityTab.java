@@ -1,6 +1,8 @@
 package com.act.main;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 
 import org.ksoap2.serialization.SoapObject;
 
@@ -9,6 +11,7 @@ import com.act.main.window.RulesPage;
 import com.act.util.CallSOAPAction;
 import com.act.util.Factory;
 import com.act.util.CallSOAPAction.ISOAPResultCallBack;
+import com.vaadin.data.Item;
 import com.vaadin.event.ItemClickEvent;
 import com.vaadin.event.ItemClickEvent.ItemClickListener;
 import com.vaadin.server.Sizeable.Unit;
@@ -42,15 +45,26 @@ public class CommodityTab extends VerticalLayout {
 	private static final long serialVersionUID = 747292357566822421L;
 	private Panel commodityPanel;
 	private String COMMODITY_LIST_ID = "commodity";
+	private List<String> commodityList = new ArrayList();
 	private ItemClickListener commoditySelectListener = new ItemClickListener() {
 		
 		@Override
 		public void itemClick(ItemClickEvent event) {
-			commodityPanel.setContent(createCommodityFormDetail(null));
+			commodityPanel.setContent(createCommodityForm());
 			
 		}
 	};
-	private ClickListener newCommodityListener;
+	private ClickListener newCommodityListener = new ClickListener(){
+
+		@Override
+		public void buttonClick(ClickEvent event) {
+			Component newComComponent = createCommodityForm();
+			commodityPanel.setContent(newComComponent);
+		}
+
+		
+	};
+	private Table list;
 	
 	public CommodityTab(){
 		setSizeFull();
@@ -97,84 +111,84 @@ public class CommodityTab extends VerticalLayout {
 		return commodityPanel;
 	}
 
-	private VerticalLayout createCommodityFormDetail(Object itemId){
-		VerticalLayout root = new VerticalLayout();
-		root.setMargin(true);
-		//---------------------------------------
-		HorizontalLayout main = Factory.getHorizontalLayoutTemplateFull();
-		main.setSpacing(true);
-		//---------------------------------------
-		HorizontalLayout buttonLayout = Factory.getHorizontalLayoutTemplateFull();
-		buttonLayout.setHeight(null);
-		buttonLayout.setSpacing(true);
-		//---------------------------------------	
-		FormLayout form = new FormLayout();
-		form.setWidth(100, Unit.PERCENTAGE);
-		//---------------------------------------
-		
-		//---------------------------------------
-		ComboBox comNameText = new ComboBox("Commodity parent");
-		ComboBox currencyText = new ComboBox("Annotation");
-		TextField minValueText = new TextField("Name");
-
-		//---------------------------------------
-		comNameText.setWidth(100, Unit.PERCENTAGE);
-		minValueText.setWidth(100, Unit.PERCENTAGE);
-		currencyText.setWidth(100, Unit.PERCENTAGE);
-		//---------------------------------------
-		main.addComponent(form);
-		main.setExpandRatio(form, 1.0f);
-		
-		form.addComponent(comNameText);
-		form.addComponent(minValueText);
-		form.addComponent(currencyText);
-		//---------------------------------------
-		
-		String buttonCaption = null;
-		if(itemId==null){
-			buttonCaption = "Save";
-		}
-		Button updateButton = new Button(buttonCaption);
-		Button ruleButton = new Button("Rules...");
-		Button discardButton = new Button("Discard");
-		updateButton.addStyleName(ValoTheme.BUTTON_PRIMARY);
-		buttonLayout.addComponent(updateButton);
-		buttonLayout.addComponent(ruleButton);
-		buttonLayout.addComponent(discardButton);
-		
-		buttonLayout.setComponentAlignment(updateButton, Alignment.MIDDLE_RIGHT);
-		buttonLayout.setComponentAlignment(ruleButton, Alignment.MIDDLE_RIGHT);
-		buttonLayout.setComponentAlignment(discardButton, Alignment.MIDDLE_RIGHT);
-		
-		buttonLayout.setExpandRatio(ruleButton, 0.0f);
-		buttonLayout.setExpandRatio(discardButton, 0.0f);
-		buttonLayout.setExpandRatio(updateButton, 1.0f);
-		//---------------------------------------
-		updateButton.addClickListener(new ClickListener() {
-			
-			@Override
-			public void buttonClick(ClickEvent event) {
-				Notification.show("Changes is saved", Type.TRAY_NOTIFICATION);
-				
-			}
-		});
-		ruleButton.addClickListener(new ClickListener() {
-			
-			@Override
-			public void buttonClick(ClickEvent event) {
-				Window w = new RulesPage();
-				UI.getCurrent().addWindow(w);
-			}
-		});
-		
-		//---------------------------------------
-		root.addComponent(main);
-		root.addComponent(buttonLayout);
-		
-		root.setExpandRatio(main, 1.0f);
-		root.setExpandRatio(buttonLayout, 0.0f);
-		return root;
-	}
+//	private VerticalLayout createCommodityFormDetail(Object itemId){
+//		VerticalLayout root = new VerticalLayout();
+//		root.setMargin(true);
+//		//---------------------------------------
+//		HorizontalLayout main = Factory.getHorizontalLayoutTemplateFull();
+//		main.setSpacing(true);
+//		//---------------------------------------
+//		HorizontalLayout buttonLayout = Factory.getHorizontalLayoutTemplateFull();
+//		buttonLayout.setHeight(null);
+//		buttonLayout.setSpacing(true);
+//		//---------------------------------------	
+//		FormLayout form = new FormLayout();
+//		form.setWidth(100, Unit.PERCENTAGE);
+//		//---------------------------------------
+//		
+//		//---------------------------------------
+//		ComboBox comNameText = new ComboBox("Commodity parent");
+//		ComboBox currencyText = new ComboBox("Annotation");
+//		TextField minValueText = new TextField("Name");
+//
+//		//---------------------------------------
+//		comNameText.setWidth(100, Unit.PERCENTAGE);
+//		minValueText.setWidth(100, Unit.PERCENTAGE);
+//		currencyText.setWidth(100, Unit.PERCENTAGE);
+//		//---------------------------------------
+//		main.addComponent(form);
+//		main.setExpandRatio(form, 1.0f);
+//		
+//		form.addComponent(comNameText);
+//		form.addComponent(minValueText);
+//		form.addComponent(currencyText);
+//		//---------------------------------------
+//		
+//		String buttonCaption = null;
+//		if(itemId==null){
+//			buttonCaption = "Save";
+//		}
+//		Button updateButton = new Button(buttonCaption);
+//		Button ruleButton = new Button("Rules...");
+//		Button discardButton = new Button("Discard");
+//		updateButton.addStyleName(ValoTheme.BUTTON_PRIMARY);
+//		buttonLayout.addComponent(updateButton);
+//		buttonLayout.addComponent(ruleButton);
+//		buttonLayout.addComponent(discardButton);
+//		
+//		buttonLayout.setComponentAlignment(updateButton, Alignment.MIDDLE_RIGHT);
+//		buttonLayout.setComponentAlignment(ruleButton, Alignment.MIDDLE_RIGHT);
+//		buttonLayout.setComponentAlignment(discardButton, Alignment.MIDDLE_RIGHT);
+//		
+//		buttonLayout.setExpandRatio(ruleButton, 0.0f);
+//		buttonLayout.setExpandRatio(discardButton, 0.0f);
+//		buttonLayout.setExpandRatio(updateButton, 1.0f);
+//		//---------------------------------------
+//		updateButton.addClickListener(new ClickListener() {
+//			
+//			@Override
+//			public void buttonClick(ClickEvent event) {
+//				Notification.show("Changes is saved", Type.TRAY_NOTIFICATION);
+//				
+//			}
+//		});
+//		ruleButton.addClickListener(new ClickListener() {
+//			
+//			@Override
+//			public void buttonClick(ClickEvent event) {
+//				Window w = new RulesPage();
+//				UI.getCurrent().addWindow(w);
+//			}
+//		});
+//		
+//		//---------------------------------------
+//		root.addComponent(main);
+//		root.addComponent(buttonLayout);
+//		
+//		root.setExpandRatio(main, 1.0f);
+//		root.setExpandRatio(buttonLayout, 0.0f);
+//		return root;
+//	}
 
 	private Component createCommodityList() {
 		Panel panel = new Panel("Commodity insurance list");
@@ -190,11 +204,11 @@ public class CommodityTab extends VerticalLayout {
 		searchText.setHeight(null);
 		searchText.setInputPrompt("Search commodity");
 		//----------------------------------------
-		Table list = new Table();
+		list = new Table();
 		list.setSelectable(true);
 		list.addContainerProperty(COMMODITY_LIST_ID, String.class, null);
 		list.addItemClickListener(commoditySelectListener );
-		initList(list);
+		initList();
 		list.setWidth(100, Unit.PERCENTAGE);
 		list.setHeight(100, Unit.PERCENTAGE);
 		list.setColumnHeaderMode(ColumnHeaderMode.HIDDEN);
@@ -215,29 +229,120 @@ public class CommodityTab extends VerticalLayout {
 		return panel;
 	}
 
-	private void initList(Table list) {
+	private void initList() {
 		String sessionId = ((InsuranceUI)UI.getCurrent()).getSessionId();
+		String match = "*";
 		LinkedHashMap<String, Object> param = new LinkedHashMap<String, Object>();
 		param.put("sessionId", sessionId);
 
 		ISOAPResultCallBack callBack = new ISOAPResultCallBack() {
 			
 			@Override
-			public void handleResult(SoapObject data) {
+			public void handleResult(SoapObject data, String StatusCode) {
 				for(int i=0; i<data.getPropertyCount(); i++){
-					data.getAttribute("");
+					String val = data.getProperty(i).toString();
+					String[] args = val.split("\\|");
+					Item item = list.addItem(args[1]);
+					item.getItemProperty(COMMODITY_LIST_ID).setValue(args[2]);
+					commodityList.add(val);
 				}
 
 			}
 			
 			@Override
-			public void handleError() {
+			public void handleError( String StatusCode) {
 				
 			}
 		};
 		
-		new CallSOAPAction(param, "getAllInsuranceCommodityByAddId", callBack);
+		new CallSOAPAction(param, "getCommodityByCreatorId", callBack);
 
+	}
+	private Component createCommodityForm() {
+		VerticalLayout layout = new VerticalLayout();
+		layout.setSizeFull();
+		layout.setMargin(true);
+		FormLayout form = new FormLayout();
+		
+		final ComboBox parentComboBox = new ComboBox("Parent");
+		final TextField nameTextField = new TextField("Name");
+		
+		nameTextField.setRequired(true);
+		
+		initParentCombo(parentComboBox);
+		nameTextField.setWidth(100, Unit.PERCENTAGE);
+		parentComboBox.setWidth(100, Unit.PERCENTAGE);
+		
+		form.addComponent(parentComboBox);
+		form.addComponent(nameTextField);
+		
+		HorizontalLayout buttonLayout = new HorizontalLayout();
+		buttonLayout.setSpacing(true);
+		Button save = new Button("Save");
+		Button clear = new Button("Discard");
+		save.addStyleName(ValoTheme.BUTTON_PRIMARY);
+
+		buttonLayout.setWidth(100, Unit.PERCENTAGE);
+		buttonLayout.setHeight(null);
+		buttonLayout.addComponent(save);
+		buttonLayout.addComponent(clear);
+		buttonLayout.setExpandRatio(save, 1.0f);
+		buttonLayout.setExpandRatio(clear, 0.0f);
+		buttonLayout.setComponentAlignment(save, Alignment.MIDDLE_RIGHT);
+		buttonLayout.setComponentAlignment(clear, Alignment.MIDDLE_RIGHT);
+		layout.addComponent(form);
+		layout.addComponent(buttonLayout);
+		layout.setExpandRatio(form, 1.0f);
+		layout.setExpandRatio(buttonLayout, 0.0f);
+		
+		ClickListener commoditySaveListener = new ClickListener(){
+
+			@Override
+			public void buttonClick(ClickEvent event) {
+				String parentId = (String) parentComboBox.getValue();
+				String comName = nameTextField.getValue().trim();
+				if(comName.isEmpty()){
+					Notification.show("Please input commodity name", Type.ERROR_MESSAGE);return;
+				}
+				
+				if(parentId == null) parentId = "0";
+				
+				LinkedHashMap<String, Object> param = new LinkedHashMap();
+				param.put("sessionId", ((InsuranceUI)UI.getCurrent()).getSessionId());
+				param.put("parentId",parentId);
+				param.put("comName",comName);
+				ISOAPResultCallBack callback = new ISOAPResultCallBack() {
+					
+					@Override
+					public void handleResult(SoapObject data, String StatusCode) {
+						if(StatusCode.equals(CallSOAPAction.SUCCESS_CODE)){
+							initList();							
+						}
+					}
+					
+					@Override
+					public void handleError( String StatusCode) {
+
+						
+					}
+				};
+				new CallSOAPAction(param, "createCommodity", callback);
+			}
+			
+		};
+		
+		save.addClickListener(commoditySaveListener);
+		
+		return layout;
+	}
+
+	private void initParentCombo(ComboBox parentComboBox) {
+		for(String s : commodityList){
+			String[] args = s.split("\\|");
+			parentComboBox.addItem(args[1]);
+			parentComboBox.setItemCaption(args[1], args[2]);
+		}
+		
 	}
 
 }
