@@ -1,15 +1,23 @@
 package com.act.login;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
+import org.json.simple.JSONObject;
 import org.ksoap2.serialization.SoapObject;
 
 import com.act.insurance.InsuranceUI;
+import com.act.insurance.model.User;
 import com.act.main.CommodityInsuranceTab;
 import com.act.main.Main;
 import com.act.main.UserHeaderComponent;
+import com.act.util.CallJSONAction;
 import com.act.util.CallSOAPAction;
+import com.act.util.CallJSONAction.IJSonCallbackListener;
 import com.act.util.CallSOAPAction.ISOAPResultCallBack;
+import com.vaadin.data.Item;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Component;
@@ -52,16 +60,33 @@ public class LoginPage extends VerticalLayout {
 				
 				@Override
 				public void handleResult(SoapObject data,  String StatusCode) {
+					String sessionId = data.getProperty("sessionId").toString();
+					String firstname = data.getProperty("firstname").toString();
+					String familyname= data.getProperty("familyname").toString();
+					String username= data.getProperty("username").toString();
+					String sAddId= data.getProperty("addId").toString();
+					Integer addId = Integer.parseInt(sAddId);
+					
+					User user = new User();
+					user.setSessionId(sessionId);
+					user.setFirstname(firstname);
+					user.setFamilyname(familyname);
+					user.setUsername(username);
+					user.setAddId(addId);
+					
+					((InsuranceUI)UI.getCurrent()).setUser(user);
+					initCommodities();
+					
 					Component userProfile = new UserHeaderComponent();
 					((InsuranceUI)UI.getCurrent()).setHeader(userProfile);
 					//-----------------------------------------------------
-					String sessionId = data.getProperty("sessionId").toString();
-					((InsuranceUI)UI.getCurrent()).setSessionId(sessionId);
+					
 					//-----------------------------------------------------					
 					((InsuranceUI)UI.getCurrent()).setInsidePage(new Main());
 					
 				}
 				
+
 				@Override
 				public void handleError( String StatusCode) {
 					
@@ -120,6 +145,33 @@ public class LoginPage extends VerticalLayout {
 		//--------------------------------------------------
 		
 		login.addClickListener(loginListener);
+	}
+	private void initCommodities() {
+		String sessionId = ((InsuranceUI)UI.getCurrent()).getUser().getSessionId();
+		String match = "*";
+		LinkedHashMap<String, Object> param = new LinkedHashMap<String, Object>();
+		param.put("sessionId", sessionId);
+		
+		IJSonCallbackListener jsonCallback = new IJSonCallbackListener() {
+			
+			@Override
+			public void handleData(Map<String, Object> values) {
+				List commodityList = new ArrayList();
+				List datas = (List) values.get("data");
+				for(Object d : datas){
+					JSONObject obj = (JSONObject) d;
+					String value = (String) obj.get("$");
+					
+					String[] args = value.split("\\|");
+					commodityList.add(value);
+				}
+				((InsuranceUI)UI.getCurrent()).setCommodityList(commodityList);
+				
+				
+			}
+		};
+		new CallJSONAction("getCommodityByCreatorId", param, jsonCallback);
+		
 	}
 
 }

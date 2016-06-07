@@ -1,8 +1,13 @@
 package com.act.insurance;
 
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.servlet.annotation.WebInitParam;
 import javax.servlet.annotation.WebServlet;
 
+import com.act.insurance.model.User;
 import com.act.login.LoginPage;
 import com.vaadin.annotations.Theme;
 import com.vaadin.annotations.VaadinServletConfiguration;
@@ -23,10 +28,11 @@ public class InsuranceUI extends UI {
 	public static class Servlet extends VaadinServlet {
 	}
 	
-	private String sessionId = null;
+	private User user;
 	private VerticalLayout layout;
 	private Component header;
-	
+	private List<String> commodityList = new ArrayList();
+	private static SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 	@Override
 	protected void init(VaadinRequest request) {
 		layout = new VerticalLayout();
@@ -38,13 +44,16 @@ public class InsuranceUI extends UI {
 		
 		setContent(layout);
 	}
-	public String getSessionId() {
-		return sessionId;
-	}
-	public void setSessionId(String sessionId) {
-		this.sessionId = sessionId;
-	}
 	
+	
+	public User getUser() {
+		return user;
+	}
+
+
+	public void setUser(User user) {
+		this.user = user;
+	}
 	public void setInsidePage(Component page){
 		layout.removeAllComponents();
 		if(header!= null){
@@ -59,4 +68,19 @@ public class InsuranceUI extends UI {
 		this.header = header;
 	}
 
+
+	public static SimpleDateFormat getSdf() {
+		return sdf;
+	}
+
+	public List<String> getCommodityList() {
+		return commodityList;
+	}
+
+
+	public void setCommodityList(List<String> commodityList) {
+		this.commodityList = commodityList;
+	}
+
+	
 }

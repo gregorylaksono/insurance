@@ -3,11 +3,17 @@ package com.act.main;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
 import org.ksoap2.serialization.SoapObject;
 
 import com.act.insurance.InsuranceUI;
 import com.act.main.window.RulesPage;
+import com.act.util.CallJSONAction;
+import com.act.util.CallJSONAction.IJSonCallbackListener;
 import com.act.util.CallSOAPAction;
 import com.act.util.Factory;
 import com.act.util.CallSOAPAction.ISOAPResultCallBack;
@@ -44,13 +50,32 @@ public class CommodityTab extends VerticalLayout {
 	 */
 	private static final long serialVersionUID = 747292357566822421L;
 	private Panel commodityPanel;
-	private String COMMODITY_LIST_ID = "commodity";
+	
+	protected static final String COMMODITY_LIST_PARENT = "parent";
+	protected static final String COMMODITY_LIST_ID = "commodity";
+	protected static final String COMMODITY_LIST_NAME = "name";
+	protected static final String COMMODITY_LIST_VAD = "vad";
+	
+	private boolean isComNew = false;
+	
 	private List<String> commodityList = new ArrayList();
+	protected String parentSelected;
+	protected String nameSelected;
+	protected String idSelected;
+	protected String vadSelected;
+	
 	private ItemClickListener commoditySelectListener = new ItemClickListener() {
 		
 		@Override
 		public void itemClick(ItemClickEvent event) {
-			commodityPanel.setContent(createCommodityForm());
+			isComNew = false;
+			Item item = event.getItem();
+			parentSelected = (String) item.getItemProperty(COMMODITY_LIST_PARENT).getValue();
+			nameSelected = (String) item.getItemProperty(COMMODITY_LIST_NAME).getValue();
+			idSelected = (String) item.getItemProperty(COMMODITY_LIST_ID).getValue();
+			vadSelected = (String) item.getItemProperty(COMMODITY_LIST_VAD).getValue();
+
+			commodityPanel.setContent(createCommodityForm(parentSelected, nameSelected));
 			
 		}
 	};
@@ -58,7 +83,8 @@ public class CommodityTab extends VerticalLayout {
 
 		@Override
 		public void buttonClick(ClickEvent event) {
-			Component newComComponent = createCommodityForm();
+			isComNew = true;
+			Component newComComponent = createCommodityForm(null, null);
 			commodityPanel.setContent(newComComponent);
 		}
 
@@ -111,84 +137,6 @@ public class CommodityTab extends VerticalLayout {
 		return commodityPanel;
 	}
 
-//	private VerticalLayout createCommodityFormDetail(Object itemId){
-//		VerticalLayout root = new VerticalLayout();
-//		root.setMargin(true);
-//		//---------------------------------------
-//		HorizontalLayout main = Factory.getHorizontalLayoutTemplateFull();
-//		main.setSpacing(true);
-//		//---------------------------------------
-//		HorizontalLayout buttonLayout = Factory.getHorizontalLayoutTemplateFull();
-//		buttonLayout.setHeight(null);
-//		buttonLayout.setSpacing(true);
-//		//---------------------------------------	
-//		FormLayout form = new FormLayout();
-//		form.setWidth(100, Unit.PERCENTAGE);
-//		//---------------------------------------
-//		
-//		//---------------------------------------
-//		ComboBox comNameText = new ComboBox("Commodity parent");
-//		ComboBox currencyText = new ComboBox("Annotation");
-//		TextField minValueText = new TextField("Name");
-//
-//		//---------------------------------------
-//		comNameText.setWidth(100, Unit.PERCENTAGE);
-//		minValueText.setWidth(100, Unit.PERCENTAGE);
-//		currencyText.setWidth(100, Unit.PERCENTAGE);
-//		//---------------------------------------
-//		main.addComponent(form);
-//		main.setExpandRatio(form, 1.0f);
-//		
-//		form.addComponent(comNameText);
-//		form.addComponent(minValueText);
-//		form.addComponent(currencyText);
-//		//---------------------------------------
-//		
-//		String buttonCaption = null;
-//		if(itemId==null){
-//			buttonCaption = "Save";
-//		}
-//		Button updateButton = new Button(buttonCaption);
-//		Button ruleButton = new Button("Rules...");
-//		Button discardButton = new Button("Discard");
-//		updateButton.addStyleName(ValoTheme.BUTTON_PRIMARY);
-//		buttonLayout.addComponent(updateButton);
-//		buttonLayout.addComponent(ruleButton);
-//		buttonLayout.addComponent(discardButton);
-//		
-//		buttonLayout.setComponentAlignment(updateButton, Alignment.MIDDLE_RIGHT);
-//		buttonLayout.setComponentAlignment(ruleButton, Alignment.MIDDLE_RIGHT);
-//		buttonLayout.setComponentAlignment(discardButton, Alignment.MIDDLE_RIGHT);
-//		
-//		buttonLayout.setExpandRatio(ruleButton, 0.0f);
-//		buttonLayout.setExpandRatio(discardButton, 0.0f);
-//		buttonLayout.setExpandRatio(updateButton, 1.0f);
-//		//---------------------------------------
-//		updateButton.addClickListener(new ClickListener() {
-//			
-//			@Override
-//			public void buttonClick(ClickEvent event) {
-//				Notification.show("Changes is saved", Type.TRAY_NOTIFICATION);
-//				
-//			}
-//		});
-//		ruleButton.addClickListener(new ClickListener() {
-//			
-//			@Override
-//			public void buttonClick(ClickEvent event) {
-//				Window w = new RulesPage();
-//				UI.getCurrent().addWindow(w);
-//			}
-//		});
-//		
-//		//---------------------------------------
-//		root.addComponent(main);
-//		root.addComponent(buttonLayout);
-//		
-//		root.setExpandRatio(main, 1.0f);
-//		root.setExpandRatio(buttonLayout, 0.0f);
-//		return root;
-//	}
 
 	private Component createCommodityList() {
 		Panel panel = new Panel("Commodity insurance list");
@@ -207,6 +155,11 @@ public class CommodityTab extends VerticalLayout {
 		list = new Table();
 		list.setSelectable(true);
 		list.addContainerProperty(COMMODITY_LIST_ID, String.class, null);
+		list.addContainerProperty(COMMODITY_LIST_NAME, String.class, null);
+		list.addContainerProperty(COMMODITY_LIST_PARENT, String.class, null);
+		list.addContainerProperty(COMMODITY_LIST_VAD, String.class, null);
+		
+		list.setVisibleColumns(COMMODITY_LIST_NAME);
 		list.addItemClickListener(commoditySelectListener );
 		initList();
 		list.setWidth(100, Unit.PERCENTAGE);
@@ -230,35 +183,24 @@ public class CommodityTab extends VerticalLayout {
 	}
 
 	private void initList() {
-		String sessionId = ((InsuranceUI)UI.getCurrent()).getSessionId();
+		String sessionId = ((InsuranceUI)UI.getCurrent()).getUser().getSessionId();
 		String match = "*";
-		LinkedHashMap<String, Object> param = new LinkedHashMap<String, Object>();
-		param.put("sessionId", sessionId);
-
-		ISOAPResultCallBack callBack = new ISOAPResultCallBack() {
-			
-			@Override
-			public void handleResult(SoapObject data, String StatusCode) {
-				for(int i=0; i<data.getPropertyCount(); i++){
-					String val = data.getProperty(i).toString();
-					String[] args = val.split("\\|");
-					Item item = list.addItem(args[1]);
-					item.getItemProperty(COMMODITY_LIST_ID).setValue(args[2]);
-					commodityList.add(val);
-				}
-
-			}
-			
-			@Override
-			public void handleError( String StatusCode) {
-				
-			}
-		};
 		
-		new CallSOAPAction(param, "getCommodityByCreatorId", callBack);
+		List<String> comList = ((InsuranceUI)UI.getCurrent()).getCommodityList();
+		for(String value : comList){
+			String[] args = value.split("\\|");
+			Item item = list.addItem(args[1]);
+			item.getItemProperty(COMMODITY_LIST_ID).setValue(args[1]);
+			item.getItemProperty(COMMODITY_LIST_NAME).setValue(args[2]);
+			item.getItemProperty(COMMODITY_LIST_PARENT).setValue(args[4]);
+			item.getItemProperty(COMMODITY_LIST_VAD).setValue(args[5]);
+			commodityList.add(value);
+		}
+		
+		
 
 	}
-	private Component createCommodityForm() {
+	private Component createCommodityForm(String selected, String name) {
 		VerticalLayout layout = new VerticalLayout();
 		layout.setSizeFull();
 		layout.setMargin(true);
@@ -269,7 +211,10 @@ public class CommodityTab extends VerticalLayout {
 		
 		nameTextField.setRequired(true);
 		
-		initParentCombo(parentComboBox);
+		parentComboBox.setWidth(200, Unit.PIXELS);
+		nameTextField.setWidth(200, Unit.PIXELS);
+		
+		initParentCombo(parentComboBox, selected);
 		nameTextField.setWidth(100, Unit.PERCENTAGE);
 		parentComboBox.setWidth(100, Unit.PERCENTAGE);
 		
@@ -280,6 +225,12 @@ public class CommodityTab extends VerticalLayout {
 		buttonLayout.setSpacing(true);
 		Button save = new Button("Save");
 		Button clear = new Button("Discard");
+		
+		if(name!=null){
+			nameTextField.setValue(name);
+			save.setCaption("Update");
+		}
+		
 		save.addStyleName(ValoTheme.BUTTON_PRIMARY);
 
 		buttonLayout.setWidth(100, Unit.PERCENTAGE);
@@ -306,27 +257,9 @@ public class CommodityTab extends VerticalLayout {
 				}
 				
 				if(parentId == null) parentId = "0";
+				if(isComNew)saveNewCommodity(parentId,comName);
+				else updateCommodity(parentId,comName);
 				
-				LinkedHashMap<String, Object> param = new LinkedHashMap();
-				param.put("sessionId", ((InsuranceUI)UI.getCurrent()).getSessionId());
-				param.put("parentId",parentId);
-				param.put("comName",comName);
-				ISOAPResultCallBack callback = new ISOAPResultCallBack() {
-					
-					@Override
-					public void handleResult(SoapObject data, String StatusCode) {
-						if(StatusCode.equals(CallSOAPAction.SUCCESS_CODE)){
-							initList();							
-						}
-					}
-					
-					@Override
-					public void handleError( String StatusCode) {
-
-						
-					}
-				};
-				new CallSOAPAction(param, "createCommodity", callback);
 			}
 			
 		};
@@ -336,11 +269,76 @@ public class CommodityTab extends VerticalLayout {
 		return layout;
 	}
 
-	private void initParentCombo(ComboBox parentComboBox) {
+	protected void updateCommodity(String parentId, String comName) {
+		LinkedHashMap<String, Object> param = new LinkedHashMap();
+		param.put("sessionId", ((InsuranceUI)UI.getCurrent()).getUser().getSessionId());
+		param.put("comId",idSelected);
+		param.put("comName",comName);
+		param.put("awbName",comName);
+		param.put("parent",parentId);
+		param.put("annId","0");
+		param.put("vadId",vadSelected);
+		ISOAPResultCallBack callback = new ISOAPResultCallBack() {
+			
+			@Override
+			public void handleResult(SoapObject data, String StatusCode) {
+				if(StatusCode.equals(CallSOAPAction.SUCCESS_CODE)){
+					Notification.show("Commodity is updated", Type.HUMANIZED_MESSAGE);
+					initList();							
+				}
+			}
+			
+			@Override
+			public void handleError( String StatusCode) {
+
+				
+			}
+		};
+		new CallSOAPAction(param, "updateCommodity", callback);
+		
+	}
+
+	protected void saveNewCommodity(String parentId, String comName) {
+		LinkedHashMap<String, Object> param = new LinkedHashMap();
+		param.put("sessionId", ((InsuranceUI)UI.getCurrent()).getUser().getSessionId());
+		param.put("parentId",parentId);
+		param.put("comName",comName);
+		ISOAPResultCallBack callback = new ISOAPResultCallBack() {
+			
+			@Override
+			public void handleResult(SoapObject data, String StatusCode) {
+				if(StatusCode.equals(CallSOAPAction.SUCCESS_CODE)){
+					initList();							
+				}
+			}
+			
+			@Override
+			public void handleError( String StatusCode) {
+
+				
+			}
+		};
+		new CallSOAPAction(param, "createCommodity", callback);
+		
+	}
+
+	private void initParentCombo(ComboBox parentComboBox, String selected) {
+		String parentSelectId = null;
+		parentComboBox.addItem("0");
+		parentComboBox.setItemCaption("0", "root");
+		
 		for(String s : commodityList){
 			String[] args = s.split("\\|");
-			parentComboBox.addItem(args[1]);
-			parentComboBox.setItemCaption(args[1], args[2]);
+			String caption = args[2];
+			String id = args[1];
+			parentComboBox.addItem(id);
+			parentComboBox.setItemCaption(args[1], caption);
+			if(selected != null && id.equals(selected))parentSelectId = id;
+		}
+		if(parentSelectId!=null) {
+			parentComboBox.select(parentSelectId);
+		}else{
+			parentComboBox.select("0");
 		}
 		
 	}
