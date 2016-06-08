@@ -28,11 +28,17 @@ public class InsuranceUI extends UI {
 	public static class Servlet extends VaadinServlet {
 	}
 	
+
 	private User user;
 	private VerticalLayout layout;
 	private Component header;
 	private List<String> commodityList = new ArrayList();
 	private static SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+
+	private String sessionId = null;
+
+	
+
 	@Override
 	protected void init(VaadinRequest request) {
 		layout = new VerticalLayout();
@@ -44,10 +50,15 @@ public class InsuranceUI extends UI {
 		
 		setContent(layout);
 	}
-	
-	
+
 	public User getUser() {
 		return user;
+}
+	public String getSessionId() {
+		return sessionId;
+	}
+	public void setSessionId(String sessionId) {
+		this.sessionId = sessionId;
 	}
 
 
