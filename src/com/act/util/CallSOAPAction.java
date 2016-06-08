@@ -48,10 +48,10 @@ public class CallSOAPAction {
 
 		try {
 			HttpTransportSE httpTransport = new HttpTransportSE(url);
-
+			String statusCode = null;
 			httpTransport.call("http://service.act.de/"+method_name, envelope);
 			Object o = envelope.bodyIn;
-			String statusCode = "Cannot connect to host server";
+
 			if(o instanceof SoapObject){
 				SoapObject getCommodityResponse = (SoapObject) o;
 				if (getCommodityResponse != null) {
@@ -82,8 +82,8 @@ public class CallSOAPAction {
 	}
 	
 	public interface ISOAPResultCallBack{
-		public void handleResult(SoapObject data, String statusCode);
-		public void handleError(String statusCode);
+		public void handleResult(SoapObject data, String StatusCode);
+		public void handleError(String StatusCode);
 	}
 	
 }

@@ -1,5 +1,6 @@
 package com.act.login;
 
+
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -18,6 +19,16 @@ import com.act.util.CallSOAPAction;
 import com.act.util.CallJSONAction.IJSonCallbackListener;
 import com.act.util.CallSOAPAction.ISOAPResultCallBack;
 import com.vaadin.data.Item;
+
+import java.util.LinkedHashMap;
+
+import org.ksoap2.serialization.SoapObject;
+
+import com.act.insurance.InsuranceUI;
+import com.act.main.CommodityInsuranceTab;
+import com.act.util.CallSOAPAction;
+import com.act.util.CallSOAPAction.ISOAPResultCallBack;
+
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Component;
@@ -59,6 +70,7 @@ public class LoginPage extends VerticalLayout {
 			ISOAPResultCallBack callback = new ISOAPResultCallBack() {
 				
 				@Override
+
 				public void handleResult(SoapObject data,  String StatusCode) {
 					String sessionId = data.getProperty("sessionId").toString();
 					String firstname = data.getProperty("firstname").toString();
@@ -87,10 +99,22 @@ public class LoginPage extends VerticalLayout {
 				}
 				
 
-				@Override
-				public void handleError( String StatusCode) {
+
+				public void handleResult(SoapObject data) {
+					String sessionId = data.getProperty("sessionId").toString();
+					((InsuranceUI)UI.getCurrent()).setSessionId(sessionId);
+					((InsuranceUI)UI.getCurrent()).setInsidePage(new CommodityInsuranceTab());
 					
 				}
+
+
+
+				@Override
+				public void handleError(String statusCode) {
+					// TODO Auto-generated method stub
+					
+				}
+
 			};
 			
 			new CallSOAPAction(m, "login",callback );
@@ -145,6 +169,7 @@ public class LoginPage extends VerticalLayout {
 		//--------------------------------------------------
 		
 		login.addClickListener(loginListener);
+
 	}
 	private void initCommodities() {
 		String sessionId = ((InsuranceUI)UI.getCurrent()).getUser().getSessionId();
@@ -171,7 +196,7 @@ public class LoginPage extends VerticalLayout {
 			}
 		};
 		new CallJSONAction("getCommodityByCreatorId", param, jsonCallback);
-		
+
 	}
 
 }

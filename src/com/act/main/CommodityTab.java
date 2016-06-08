@@ -342,5 +342,4 @@ public class CommodityTab extends VerticalLayout {
 		}
 		
 	}
-
 }
