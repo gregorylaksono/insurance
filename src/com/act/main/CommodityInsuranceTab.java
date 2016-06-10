@@ -1,11 +1,13 @@
 package com.act.main;
 
-
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.ksoap2.serialization.SoapObject;
 
@@ -15,6 +17,9 @@ import com.act.main.window.RulesPage;
 import com.act.util.CallSOAPAction;
 import com.act.util.CallSOAPAction.ISOAPResultCallBack;
 import com.act.util.Factory;
+import com.google.gwt.event.logical.shared.ValueChangeEvent;
+import com.google.gwt.event.logical.shared.ValueChangeHandler;
+import com.google.gwt.user.client.ui.CheckBox;
 import com.vaadin.data.Item;
 import com.vaadin.event.ItemClickEvent;
 import com.vaadin.event.ItemClickEvent.ItemClickListener;
@@ -59,7 +64,11 @@ public class CommodityInsuranceTab extends VerticalLayout {
 	private static final String ITEM_COM_ID = "id";
 	private static final String ITEM_LIST_NAME = "name";
 	private static final String ITEM_VALID_TO_VALUE = "validuntil";
+	private static final String ITEM_COUNTRY_AREA_ENABLE = "country_area_enable";
+	private static final String ITEM_COUNTRY_AREA_TYPE = "country_area_type";
+	private static final String ITEM_COUNTRY_AREA_BUTTON = "country_remove_button";
 	private Long comInsId = null;
+	private Map<String,String> ruleList = new HashMap();
 	private ItemClickListener commoditySelectListener = new ItemClickListener(){
 
 		@Override
@@ -81,6 +90,9 @@ public class CommodityInsuranceTab extends VerticalLayout {
 	};
 	private Panel commodityPanel;
 	private Table insuranceList;
+	private Table countryList;
+	
+
 	
 	public CommodityInsuranceTab(){
 		setSizeFull();
@@ -126,10 +138,80 @@ public class CommodityInsuranceTab extends VerticalLayout {
 		return commodityPanel;
 	}
 
-	private void loadCountryAreaList(Table countryList) {
+	private void loadCountryAreaList(final Table countryList, Object itemId) {
 		
+		User user = ((InsuranceUI)UI.getCurrent()).getUser();
+		LinkedHashMap<String, Object> param = new LinkedHashMap<String, Object>();
+		param.put("sessionId",user.getSessionId());
+		param.put("commodityInsuranceId", itemId.toString());
+		
+		ISOAPResultCallBack callback = new ISOAPResultCallBack() {
+			
+			@Override
+			public void handleResult(SoapObject data, String statusCode) {
+				
+				for(int i=0; i<data.getPropertyCount(); i++){
+					final String d = data.getProperty(i).toString();
+					if(!d.isEmpty()){
+						//"a|"+ar.getAr_name()+"|"+base.getRAr().getArCode()+"|"+base.getRAr().getArBool();
+						String[] args = d.split("\\|");
+						String area = args[0];
+						String name = args[1];
+						String code = args[2];
+						String isEnable = args[3];
+						
+						insertItemToCountryList(code, name, area, isEnable);
+						
+						String id = area+"|"+code+"|"+isEnable+"|";
+						ruleList.put(code, id);
+					}
+				}
+			}
+			
+			@Override
+			public void handleError(String statusCode) {
+				
+				
+			}
+		};
+		
+		new CallSOAPAction(param, "getRulesByCommodityInsurance", callback);
 	}
 	
+	protected void insertItemToCountryList(final String id,final String name,final String area, String isEnable) {
+		CheckBox cb = new CheckBox();
+		cb.setValue(isEnable.equals("1"));
+		cb.addValueChangeHandler(new ValueChangeHandler<Boolean>() {
+			
+			@Override
+			public void onValueChange(ValueChangeEvent<Boolean> event) {
+				String isIncl = event.getValue() ? "1":"0";
+				String val = ruleList.get(id);
+				String id = area+"|"+val+"|"+isIncl+"|";
+			}
+		});
+		
+		Button remove = new Button("Remove");
+		remove.addStyleName(ValoTheme.BUTTON_TINY);
+		remove.addStyleName(ValoTheme.BUTTON_DANGER);
+		remove.addClickListener(new ClickListener(){
+
+			@Override
+			public void buttonClick(ClickEvent event) {
+				countryList.removeItem(id);
+			}
+			
+		});
+		
+		Item item = countryList.addItem(id);
+		item.getItemProperty(ITEM_COUNTRY_AREA_ID).setValue(name);
+		item.getItemProperty(ITEM_COUNTRY_AREA_ENABLE).setValue(cb);
+		item.getItemProperty(ITEM_COUNTRY_AREA_TYPE).setValue(area.equals("a") ? "Area":"Country");
+		item.getItemProperty(ITEM_COUNTRY_AREA_BUTTON).setValue(remove);
+		
+		
+	}
+
 	private VerticalLayout createCommodityFormDetail(Object itemId){
 		VerticalLayout root = new VerticalLayout();
 		root.setMargin(true);
@@ -143,14 +225,22 @@ public class CommodityInsuranceTab extends VerticalLayout {
 		form.setWidth(100, Unit.PERCENTAGE);
 		form.setHeight(100, Unit.PERCENTAGE);
 		//---------------------------------------
-		Table countryList = new Table();
+		countryList = new Table();
 		countryList.setHeight(200, Unit.PIXELS);
 		countryList.setWidth(300, Unit.PIXELS);
+		
 		countryList.addContainerProperty(this.ITEM_COUNTRY_AREA_ID , String.class, null);
+		countryList.addContainerProperty(this.ITEM_COUNTRY_AREA_ENABLE , Component.class, null);
+		countryList.addContainerProperty(this.ITEM_COUNTRY_AREA_TYPE , String.class, null);
+		countryList.addContainerProperty(this.ITEM_COUNTRY_AREA_BUTTON , Component.class, null);
+		
 		countryList.setColumnHeader(this.ITEM_COUNTRY_AREA_ID, "Country/Area");
+		countryList.setColumnHeader(this.ITEM_COUNTRY_AREA_ENABLE, "Include");
+		countryList.setColumnHeader(this.ITEM_COUNTRY_AREA_TYPE, "Type");
+		countryList.setColumnHeader(this.ITEM_COUNTRY_AREA_BUTTON, "Remove");
 		countryList.setColumnReorderingAllowed(false);
 		
-		loadCountryAreaList(countryList);
+		loadCountryAreaList(countryList,itemId);
 		//---------------------------------------
 		final ComboBox comNameText = new ComboBox("Commodity");
 		final TextField minValueText = new TextField("Min. value");
@@ -310,7 +400,7 @@ public class CommodityInsuranceTab extends VerticalLayout {
 			
 			@Override
 			public void buttonClick(ClickEvent event) {
-				Window w = new RulesPage();
+				Window w = new RulesPage(CommodityInsuranceTab.this);
 				UI.getCurrent().addWindow(w);
 			}
 		});
@@ -440,7 +530,29 @@ public class CommodityInsuranceTab extends VerticalLayout {
 
 	}
 
+	public void reloadRuleTable(String value) {
+		String[] args = value.split("\\|");
+		insertItemToCountryList(value, args[2], args[0], "0");
+	}
+	
+	private String[] getValueFromTable(){
+		List<String> s = new ArrayList();
+		for(Object i: countryList.getItemIds()){
+			Item item = countryList.getItem(i);
+			String code = (String) item.getItemProperty(ITEM_COUNTRY_AREA_ID).getValue();
+			String isInclusive = (String) item.getItemProperty(ITEM_COUNTRY_AREA_ENABLE).getValue();
+			String type= (String) item.getItemProperty(ITEM_COUNTRY_AREA_TYPE).getValue();
+			String result = null;
+			
+			
+			
+//			item.getItemProperty(ITEM_COUNTRY_AREA_ID).setValue(name);
+//			item.getItemProperty().setValue(cb);
+//			item.getItemProperty().setValue(area.equals("a") ? "Area":"Country");
+//			item.getItemProperty().setValue(remove)
+		}
+		return s.toArray(new String[s.size()]);
+	}
 
 }
-
 
