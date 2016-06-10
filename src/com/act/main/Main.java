@@ -22,7 +22,6 @@ public class Main extends VerticalLayout {
 		main.addTab(new CommodityTab(),"Commodity");
 		
 		addComponent(main);
-		main.addTab(new CommodityInsuranceTab(),"Insurance");
 		
 	}
 }

@@ -177,6 +177,27 @@ public class LoginPage extends VerticalLayout {
 		LinkedHashMap<String, Object> param = new LinkedHashMap<String, Object>();
 		param.put("sessionId", sessionId);
 		
+		ISOAPResultCallBack callback = new ISOAPResultCallBack() {
+			
+			@Override
+			public void handleResult(SoapObject data, String StatusCode) {
+				List commodityList = new ArrayList();
+				for(int i=0; i<data.getPropertyCount(); i++){
+					String value  =  data.getProperty(i).toString();
+					String[] args = value.split("\\|");
+					commodityList.add(value);
+				}
+				((InsuranceUI)UI.getCurrent()).setCommodityList(commodityList);
+				
+			}
+			
+			@Override
+			public void handleError(String StatusCode) {
+				// TODO Auto-generated method stub
+				
+			}
+		};
+		
 		IJSonCallbackListener jsonCallback = new IJSonCallbackListener() {
 			
 			@Override
@@ -195,7 +216,8 @@ public class LoginPage extends VerticalLayout {
 				
 			}
 		};
-		new CallJSONAction("getCommodityByCreatorId", param, jsonCallback);
+		new CallSOAPAction(param, "getCommodityByCreatorId", callback);
+//		new CallJSONAction("getCommodityByCreatorId", param, jsonCallback);
 
 	}
 

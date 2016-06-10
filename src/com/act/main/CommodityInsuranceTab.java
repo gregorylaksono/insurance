@@ -187,7 +187,16 @@ public class CommodityInsuranceTab extends VerticalLayout {
 			public void onValueChange(ValueChangeEvent<Boolean> event) {
 				String isIncl = event.getValue() ? "1":"0";
 				String val = ruleList.get(id);
-				String id = area+"|"+val+"|"+isIncl+"|";
+				String[] array = val.split("|");
+				String code = array[2];
+				String access = array[4];
+				String value = null;
+				if(access == null || access.equals("e")){
+					value = area+"|"+code+"|"+isIncl+"|"+"e";					
+				}else{
+					value = area+"|"+code+"|"+isIncl+"|"+"n";
+				}
+				ruleList.put(id, value);
 			}
 		});
 		
@@ -198,6 +207,18 @@ public class CommodityInsuranceTab extends VerticalLayout {
 
 			@Override
 			public void buttonClick(ClickEvent event) {
+				String val = ruleList.get(id);
+				String[] array = val.split("|");
+				String code = array[2];
+				String isIncl = array[3];
+				String access = array[4];
+				String value = null;
+				if(access.equals("n")){
+					ruleList.remove(id);
+				}else if(access == null || access.equals("e")){
+					value = area+"|"+code+"|"+isIncl+"|"+"d";
+					ruleList.put(id, value);
+				}
 				countryList.removeItem(id);
 			}
 			
@@ -239,8 +260,9 @@ public class CommodityInsuranceTab extends VerticalLayout {
 		countryList.setColumnHeader(this.ITEM_COUNTRY_AREA_TYPE, "Type");
 		countryList.setColumnHeader(this.ITEM_COUNTRY_AREA_BUTTON, "Remove");
 		countryList.setColumnReorderingAllowed(false);
-		
-		loadCountryAreaList(countryList,itemId);
+		if(itemId != null){
+			loadCountryAreaList(countryList,itemId);			
+		}
 		//---------------------------------------
 		final ComboBox comNameText = new ComboBox("Commodity");
 		final TextField minValueText = new TextField("Min. value");
@@ -354,7 +376,7 @@ public class CommodityInsuranceTab extends VerticalLayout {
 				Date fromValidDateValue = validFromDate.getValue();
 				Date toValidDateValue = validUntilDate.getValue();
 				User user = ((InsuranceUI)UI.getCurrent()).getUser();
-				
+				String[] rules = getListAsArray();
 				String validFrom = null;
 				String validTo = null;
 				DateFormat format = new SimpleDateFormat("M/d/yyyy");
@@ -376,6 +398,7 @@ public class CommodityInsuranceTab extends VerticalLayout {
 				param.put("min", minValue);
 				param.put("from", validFrom);
 				param.put("to", validTo);
+				param.put("rules",rules);
 				
 				ISOAPResultCallBack callback = new ISOAPResultCallBack() {
 					
@@ -387,7 +410,7 @@ public class CommodityInsuranceTab extends VerticalLayout {
 					
 					@Override
 					public void handleError(String statusCode) {
-						// TODO Auto-generated method stub
+
 						
 					}
 				};
@@ -412,6 +435,16 @@ public class CommodityInsuranceTab extends VerticalLayout {
 		root.setExpandRatio(form, 1.0f);
 		root.setExpandRatio(buttonLayout, 0.0f);
 		return root;
+	}
+
+	protected String[] getListAsArray() {
+		int index = 0;
+		String[] result = new String[ruleList.size()];
+		for(Map.Entry<String, String> m : ruleList.entrySet()){
+			result[index] = m.getValue();
+			index++;
+		}
+		return result;
 	}
 
 	private void initCurrency(ComboBox currencyText) {
