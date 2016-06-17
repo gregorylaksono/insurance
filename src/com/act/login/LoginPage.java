@@ -216,8 +216,8 @@ public class LoginPage extends VerticalLayout {
 				
 			}
 		};
-		new CallSOAPAction(param, "getCommodityByCreatorId", callback);
-//		new CallJSONAction("getCommodityByCreatorId", param, jsonCallback);
+//		new CallSOAPAction(param, "getCommodityByCreatorId", callback);
+		new CallJSONAction("getCommodityByCreatorId", param, jsonCallback);
 
 	}
 

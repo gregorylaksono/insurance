@@ -19,8 +19,8 @@ import com.act.util.CallSOAPAction.ISOAPResultCallBack;
 import com.act.util.Factory;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
-import com.google.gwt.user.client.ui.CheckBox;
 import com.vaadin.data.Item;
+import com.vaadin.data.Property.ValueChangeListener;
 import com.vaadin.event.ItemClickEvent;
 import com.vaadin.event.ItemClickEvent.ItemClickListener;
 import com.vaadin.shared.ui.MarginInfo;
@@ -46,6 +46,7 @@ import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Button.ClickListener;
+import com.vaadin.ui.CheckBox;
 import com.vaadin.ui.themes.ValoTheme;
 
 public class CommodityInsuranceTab extends VerticalLayout {
@@ -79,6 +80,7 @@ public class CommodityInsuranceTab extends VerticalLayout {
 		}
 		
 	};
+	
 	private ClickListener newCommodityInsuranceListener = new ClickListener(){
 
 		@Override
@@ -88,12 +90,11 @@ public class CommodityInsuranceTab extends VerticalLayout {
 		}
 		
 	};
+	
 	private Panel commodityPanel;
 	private Table insuranceList;
 	private Table countryList;
-	
-
-	
+		
 	public CommodityInsuranceTab(){
 		setSizeFull();
 //		MarginInfo margin = new MarginInfo(true);
@@ -181,22 +182,27 @@ public class CommodityInsuranceTab extends VerticalLayout {
 	protected void insertItemToCountryList(final String id,final String name,final String area, String isEnable) {
 		CheckBox cb = new CheckBox();
 		cb.setValue(isEnable.equals("1"));
-		cb.addValueChangeHandler(new ValueChangeHandler<Boolean>() {
+		cb.addValueChangeListener(new ValueChangeListener() {
 			
 			@Override
-			public void onValueChange(ValueChangeEvent<Boolean> event) {
-				String isIncl = event.getValue() ? "1":"0";
-				String val = ruleList.get(id);
-				String[] array = val.split("|");
+			public void valueChange(com.vaadin.data.Property.ValueChangeEvent event) {
+				String isIncl = (boolean) event.getProperty().getValue() ? "1":"0";
+				//c|AMERICAN SAMOA|AS|1
+				String[] args = id.split("\\|",-1); 
+				String val = ruleList.get(args[2]);
+				String[] array = val.split("\\|");
 				String code = array[2];
-				String access = array[4];
 				String value = null;
-				if(access == null || access.equals("e")){
-					value = area+"|"+code+"|"+isIncl+"|"+"e";					
+				if(array.length > 4){
+					String flag = array[5];
+					if(flag.equals("e")){
+						value = area+"|"+code+"|"+isIncl+"|"+"e";											
+					}
 				}else{
 					value = area+"|"+code+"|"+isIncl+"|"+"n";
 				}
-				ruleList.put(id, value);
+				ruleList.put(val, value);
+				
 			}
 		});
 		
@@ -207,7 +213,9 @@ public class CommodityInsuranceTab extends VerticalLayout {
 
 			@Override
 			public void buttonClick(ClickEvent event) {
-				String val = ruleList.get(id);
+				String args[] = id.split("\\|");
+				//c|AMERICAN SAMOA|AS|1
+				String val = ruleList.get(args[2]);
 				String[] array = val.split("|");
 				String code = array[2];
 				String isIncl = array[3];
@@ -248,7 +256,7 @@ public class CommodityInsuranceTab extends VerticalLayout {
 		//---------------------------------------
 		countryList = new Table();
 		countryList.setHeight(200, Unit.PIXELS);
-		countryList.setWidth(300, Unit.PIXELS);
+		countryList.setWidth(350, Unit.PIXELS);
 		
 		countryList.addContainerProperty(this.ITEM_COUNTRY_AREA_ID , String.class, null);
 		countryList.addContainerProperty(this.ITEM_COUNTRY_AREA_ENABLE , Component.class, null);
@@ -259,6 +267,10 @@ public class CommodityInsuranceTab extends VerticalLayout {
 		countryList.setColumnHeader(this.ITEM_COUNTRY_AREA_ENABLE, "Include");
 		countryList.setColumnHeader(this.ITEM_COUNTRY_AREA_TYPE, "Type");
 		countryList.setColumnHeader(this.ITEM_COUNTRY_AREA_BUTTON, "Remove");
+		
+		countryList.setColumnAlignment(this.ITEM_COUNTRY_AREA_ENABLE, Table.ALIGN_CENTER);
+		countryList.setColumnAlignment(this.ITEM_COUNTRY_AREA_TYPE, Table.ALIGN_CENTER);
+		countryList.setColumnAlignment(this.ITEM_COUNTRY_AREA_BUTTON, Table.ALIGN_CENTER);
 		countryList.setColumnReorderingAllowed(false);
 		if(itemId != null){
 			loadCountryAreaList(countryList,itemId);			
@@ -565,7 +577,9 @@ public class CommodityInsuranceTab extends VerticalLayout {
 
 	public void reloadRuleTable(String value) {
 		String[] args = value.split("\\|");
-		insertItemToCountryList(value, args[2], args[0], "0");
+		//area+"|"+name+"|"+code+"|"+"1";
+		insertItemToCountryList(value, args[1], args[0], "0");
+		ruleList.put(args[2], value);
 	}
 	
 	private String[] getValueFromTable(){
@@ -586,6 +600,7 @@ public class CommodityInsuranceTab extends VerticalLayout {
 		}
 		return s.toArray(new String[s.size()]);
 	}
+
 
 }
 

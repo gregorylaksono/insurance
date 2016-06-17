@@ -3,6 +3,7 @@ package com.act.main.window;
 import java.util.LinkedHashMap;
 
 import org.ksoap2.serialization.SoapObject;
+import org.ksoap2.serialization.SoapPrimitive;
 import org.vaadin.addon.leaflet.LMap;
 import org.vaadin.addon.leaflet.LMarker;
 import org.vaadin.addon.leaflet.LOpenStreetMapLayer;
@@ -24,6 +25,8 @@ import com.vaadin.tapio.googlemaps.GoogleMap;
 import com.vaadin.tapio.googlemaps.client.LatLon;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
+import com.vaadin.ui.Button.ClickEvent;
+import com.vaadin.ui.Button.ClickListener;
 import com.vaadin.ui.ComboBox;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.HorizontalLayout;
@@ -45,6 +48,31 @@ public class RulesPage extends Window{
 	private static final String AREA_NAME = "areaname";
 	private Table areaTable;
 	private CommodityInsuranceTab commodityInsurance;
+	private ClickListener selectListener = new ClickListener(){
+
+		@Override
+		public void buttonClick(ClickEvent event) {
+			String code = (String) cb.getValue();
+			String area = (String) areaOptions.getValue();
+			String name = cb.getItemCaption(code);
+			//"a|"+ar.getAr_name()+"|"+base.getRAr().getArCode()+"|"+base.getRAr().getArBool();
+			String value = area+"|"+name+"|"+code+"|"+"1";
+			commodityInsurance.reloadRuleTable(value);
+			UI.getCurrent().removeWindow(RulesPage.this);
+		}
+		
+	};
+	private ClickListener closeListener = new ClickListener(){
+
+		@Override
+		public void buttonClick(ClickEvent event) {
+			UI.getCurrent().removeWindow(RulesPage.this);
+			
+		}
+		
+	};
+	private ComboBox cb;
+	private OptionGroup areaOptions;
 
 //	private LMap leafletMap;
 	public RulesPage(CommodityInsuranceTab commodityInsurance){
@@ -53,21 +81,23 @@ public class RulesPage extends Window{
 		setClosable(true);
 		createContents();
 		center();
-		setHeight(600, Unit.PIXELS);
-		setWidth(600, Unit.PIXELS);
+		setHeight(400, Unit.PIXELS);
+		setWidth(300, Unit.PIXELS);
 	}
 
 	private void createContents() {
 		VerticalLayout layout = Factory.getVerticalLayoutTemplateFull();
 		Component map = createMap();
 		layout.addComponent(map);
+		layout.setComponentAlignment(map, Alignment.MIDDLE_CENTER);
 		setContent(layout);
 	}
 
 	private Component createMap() {
 		VerticalLayout layout = new VerticalLayout();
-		ComboBox cb = new ComboBox();
-		OptionGroup areaOptions = new OptionGroup();
+		layout.setSpacing(true);
+		cb = new ComboBox();
+		areaOptions = new OptionGroup();
 		areaOptions.addStyleName(ValoTheme.OPTIONGROUP_HORIZONTAL);
 		areaOptions.addItem("a");
 		areaOptions.addItem("c");
@@ -77,10 +107,19 @@ public class RulesPage extends Window{
 		layout.addComponent(areaOptions);
 		layout.addComponent(cb);
 		
+		layout.setComponentAlignment(areaOptions, Alignment.TOP_CENTER);
+		layout.setComponentAlignment(cb, Alignment.TOP_CENTER);
+		
 		HorizontalLayout buttonLayout = new HorizontalLayout();
 		buttonLayout.setSpacing(true);
 		Button selectButton = new Button("Select");
 		Button cancelButton = new Button("Close");
+		
+		selectButton.addClickListener(selectListener);
+		cancelButton.addClickListener(closeListener);
+		
+		selectButton.addStyleName(ValoTheme.BUTTON_PRIMARY);
+		
 		buttonLayout.addComponent(selectButton);
 		buttonLayout.addComponent(cancelButton);
 		buttonLayout.setExpandRatio(selectButton, 1.0f);
@@ -92,6 +131,7 @@ public class RulesPage extends Window{
 		cb.addValueChangeListener(new AreaChangeListener(areaOptions));
 
 		layout.addComponent(buttonLayout);
+		layout.setComponentAlignment(buttonLayout, Alignment.MIDDLE_CENTER);
 		
 		areaOptions.setHeight(null);
 		cb.setHeight(null);
@@ -104,29 +144,6 @@ public class RulesPage extends Window{
 		return layout;
 	}
 
-//	private Component createMap() {
-//		GoogleMap googleMap = new GoogleMap(null, null, "english");
-//		googleMap.addMarker("NOT DRAGGABLE: Indonesia", new LatLon(
-//				-6.159218, 106.824628), false, null);
-//        googleMap.setMinZoom(1);
-//        googleMap.setMaxZoom(16);
-//        googleMap.setCenter(new LatLon(-6.159218, 106.824628));
-//        googleMap.setSizeFull();
-//		return googleMap;
-//	}
-	
-//	private Component createMap() {
-//		leafletMap = new LMap();
-//		leafletMap.setCenter(-6.159218, 106.824628);
-//		leafletMap.setZoomLevel(1);
-//		leafletMap.addBaseLayer(new LOpenStreetMapLayer(),"OSM");
-//	
-//		LMarker marker = new LMarker(-0.789275,113.921327);
-//		marker.setPopup("Indonesia");
-//		leafletMap.addComponent(marker);
-//		
-//		return leafletMap;
-//	}
 	private class AreaChangeListener implements ValueChangeListener{
 		
 	/**
@@ -152,10 +169,10 @@ public class RulesPage extends Window{
 
 					for(int i=0; i<data.getPropertyCount(); i++){
 						SoapObject s = (SoapObject) data.getProperty(i);
-						String name = (String) s.getProperty("co_name");
-						String code = (String) s.getProperty("co_2lc");
-						Item item = areaTable.addItem(code);
-						item.getItemProperty(AREA_NAME).setValue(name);
+						SoapPrimitive name = (SoapPrimitive) s.getProperty("co_name");
+						SoapPrimitive code = (SoapPrimitive) s.getProperty("co_2lc");
+						Item item = areaTable.addItem(code.toString());
+						item.getItemProperty(AREA_NAME).setValue(name.toString());
 					}
 				}
 
@@ -166,7 +183,7 @@ public class RulesPage extends Window{
 				}
 				
 			};
-			new CallSOAPAction(param, "getAllCountries", callback);
+			new CallSOAPAction(param, "getCountryByArea", callback);
 		}
 		
 	}
@@ -192,12 +209,17 @@ public class RulesPage extends Window{
 			String id = (String) event.getProperty().getValue();
 			cb.removeAllItems();
 			listComponent(cb, id);
+			if(areaTable!= null)parent.removeComponent(areaTable);
 			if(id.equals("a")){
 				areaTable = new Table();
 				areaTable.setHeight(200, Unit.PIXELS);
+				areaTable.setWidth(200, Unit.PIXELS);
 //				areaList.addContainerProperty(AREA_ID,String.class,null);
 				areaTable.addContainerProperty(AREA_NAME,String.class,null);
+				areaTable.setColumnAlignment(AREA_NAME, Table.ALIGN_CENTER);
+				areaTable.setColumnHeader(AREA_NAME, "Country");
 				parent.addComponent(areaTable,2);
+				parent.setComponentAlignment(areaTable, Alignment.MIDDLE_CENTER);
 				parent.setExpandRatio(areaTable, 0.0f);
 			}else if(id.equals("c")){
 				
@@ -217,8 +239,8 @@ public class RulesPage extends Window{
 				public void handleResult(SoapObject data, String statusCode) {
 					for(int i=0; i<data.getPropertyCount(); i++){
 						SoapObject raw = (SoapObject) data.getProperty(i);
-						String name = raw.getProperty("ar_name").toString();
-						String code = raw.getProperty("ar_code").toString();
+						String name = raw.getProperty("name").toString();
+						String code = raw.getProperty("code").toString();
 						
 						cb.addItem(code);
 						cb.setItemCaption(code, name);
