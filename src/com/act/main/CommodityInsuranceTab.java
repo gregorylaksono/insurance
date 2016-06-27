@@ -96,6 +96,11 @@ public class CommodityInsuranceTab extends VerticalLayout {
 
 		@Override
 		public void buttonClick(ClickEvent event) {
+			final Object value = insuranceList.getValue();
+			if(value == null){
+				Notification.show("Please select an insurance", Type.ERROR_MESSAGE);
+				return;
+			}
 			ConfirmDialog.show(UI.getCurrent(), "Please Confirm:", "Delete this insurance?",
 			        "Delete", "Cancel", new ConfirmDialog.Listener() {
 					
@@ -103,13 +108,15 @@ public class CommodityInsuranceTab extends VerticalLayout {
 			                if (dialog.isConfirmed()) {
 			                	User user  = ((InsuranceUI)UI.getCurrent()).getUser();
 			                	LinkedHashMap<String, Object> param = new LinkedHashMap<>();
-			                	param.put("insuranceId", insuranceList.getValue());
 			                	param.put("sessionId", user.getSessionId());
+			                	param.put("insuranceId", value);
 			                	ISOAPResultCallBack callback = new ISOAPResultCallBack() {
 									
 									@Override
 									public void handleResult(SoapObject data, String StatusCode) {
 										insuranceList.removeItem(insuranceList.getValue());
+										VerticalLayout root = Factory.getVerticalLayoutTemplateFull();
+										commodityPanel.setContent(root);
 									}
 									
 									@Override
@@ -196,7 +203,7 @@ public class CommodityInsuranceTab extends VerticalLayout {
 						String code = args[2];
 						String isEnable = args[3];
 						
-						insertItemToCountryList(code, name, area, isEnable);
+						insertItemToCountryList(d, name, area, isEnable);
 						
 						String id = area+"|"+code+"|"+isEnable+"|";
 						ruleList.put(code, id);
@@ -222,23 +229,22 @@ public class CommodityInsuranceTab extends VerticalLayout {
 			@Override
 			public void valueChange(com.vaadin.data.Property.ValueChangeEvent event) {
 				String isIncl = (boolean) event.getProperty().getValue() ? "1":"0";
-				//c|AMERICAN SAMOA|AS|1
+				//c|AMERICAN SAMOA|AS|1  / a|JAPAN/KOREA|0316|1|n
 				String[] args = id.split("\\|",-1); 
 				String val = ruleList.get(args[2]);
 				String[] array = val.split("\\|");
-				String code = array[2];
-				String name = array[1];
+				String code = array[1];
 				String value = null;
 				if(array.length > 4){
 					String flag = array[4];
 					if(flag.equals("e")){
-						value = area+"|"+name+"|"+code+"|"+isIncl+"|"+"e";											
+						value = area+"|"+code+"|"+isIncl+"|"+"e";											
 					}
 					else{
-						value = area+"|"+name+"|"+code+"|"+isIncl+"|"+"n";
+						value = area+"|"+code+"|"+isIncl+"|"+"n";
 					}
 				}else{
-					value = area+"|"+name+"|"+code+"|"+isIncl+"|"+"n";
+					value = area+"|"+code+"|"+isIncl+"|"+"e";
 				}
 				ruleList.put(code, value);
 				
@@ -255,16 +261,20 @@ public class CommodityInsuranceTab extends VerticalLayout {
 				String args[] = id.split("\\|");
 				//c|AMERICAN SAMOA|AS|1
 				String val = ruleList.get(args[2]);
-				String[] array = val.split("|");
-				String code = array[2];
-				String isIncl = array[3];
-				String access = array[4];
+				String[] array = val.split("\\|");
+				String code = array[1];
+				String isIncl = array[2];
+				String access  = null;
+				if(array.length > 3){
+					access = array[3];					
+				}
+				
 				String value = null;
-				if(access.equals("n")){
+				if(access != null && access.equals("n")){
 					ruleList.remove(id);
-				}else if(access == null || access.equals("e")){
+				}else {
 					value = area+"|"+code+"|"+isIncl+"|"+"d";
-					ruleList.put(id, value);
+					ruleList.put(code, value);
 				}
 				countryList.removeItem(id);
 			}
@@ -322,7 +332,7 @@ public class CommodityInsuranceTab extends VerticalLayout {
 		final TextField rateText = new TextField("Rate");
 		final DateField validFromDate = new DateField("Valid from");
 		final DateField validUntilDate = new DateField("Valid until");
-		Button ruleButton = new Button("Rules...");
+		Button ruleButton = new Button("Add rules...");
 		//---------------------------------------		
 		comNameText.setRequired(true);
 		minValueText.setRequired(true);
@@ -551,16 +561,30 @@ public class CommodityInsuranceTab extends VerticalLayout {
 		addNew.addStyleName(ValoTheme.BUTTON_PRIMARY);
 		addNew.addClickListener(newCommodityInsuranceListener);
 		//----------------------------------------
+		HorizontalLayout buttonLayout = new HorizontalLayout();
+		buttonLayout.setWidth(100, Unit.PERCENTAGE);
+		//----------------------------------------
 		Button delete = new Button("Delete");
 		delete.addStyleName(ValoTheme.BUTTON_DANGER);
 		delete.addClickListener(deleteInsuranceListener );
 		//----------------------------------------
+		buttonLayout.setSpacing(true);
+		//----------------------------------------
+		buttonLayout.addComponent(addNew);
+		buttonLayout.addComponent(delete);
+		//----------------------------------------
+		buttonLayout.setComponentAlignment(addNew, Alignment.MIDDLE_RIGHT);
+		buttonLayout.setComponentAlignment(delete, Alignment.MIDDLE_RIGHT);
+		//----------------------------------------
+		buttonLayout.setExpandRatio(addNew, 1.0f);
+		buttonLayout.setExpandRatio(delete, 0.0f);
+		//----------------------------------------
 		layout.addComponent(searchText);
 		layout.addComponent(insuranceList);
-		layout.addComponent(addNew);
+		layout.addComponent(buttonLayout);
 		//----------------------------------------
 		layout.setExpandRatio(searchText, 0.0f);
-		layout.setExpandRatio(addNew, 0.0f);
+		layout.setExpandRatio(buttonLayout, 0.0f);
 		layout.setExpandRatio(insuranceList, 1.0f);
 		//----------------------------------------
 		
@@ -604,7 +628,7 @@ public class CommodityInsuranceTab extends VerticalLayout {
 //					item.getItemProperty(ITEM_COUNTRY_AREA_ID).setValue();
 					item.getItemProperty(ITEM_COM_ID).setValue(comId);
 					item.getItemProperty(ITEM_LIST_NAME).setValue(commodityName);
-					
+					insuranceList.setItemCaption(insuranceId, commodityName);
 				}
 
 			}
@@ -622,8 +646,14 @@ public class CommodityInsuranceTab extends VerticalLayout {
 	public void reloadRuleTable(String value, String isEnable) {
 		String[] args = value.split("\\|");
 		//area+"|"+name+"|"+code+"|"+"1";
+		//c|AMERICAN SAMOA|AS|1
 		insertItemToCountryList(value, args[1], args[0], isEnable);
-		ruleList.put(args[2], value);
+
+		String area = args[0];
+		String code = args[2];
+		String mode = args[4];
+		String value2 = area +"|"+code+"|"+isEnable+"|"+mode; 
+		ruleList.put(args[2], value2);
 	}
 	
 	private String[] getValueFromTable(){

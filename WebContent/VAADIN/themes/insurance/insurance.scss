@@ -39,5 +39,10 @@ $v-font-size: 14px;
 [class*="margin-bottom"] > tbody > [class*="lastrow"] > td{
 	padding-bottom:0px !important;
 }
-
+.no-padding-left{
+	padding-left:0px !important;
+}
+*:focus {
+    outline: none;
+}
 }

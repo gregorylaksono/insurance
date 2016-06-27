@@ -12944,3 +12944,11 @@ div.v-layout.v-horizontal.v-widget {
 .insurance [class*="margin-bottom"] > tbody > [class*="lastrow"] > td {
 	padding-bottom: 0px !important;
 }
+
+.insurance .no-padding-left {
+	padding-left: 0px !important;
+}
+
+.insurance *:focus {
+	outline: none;
+}

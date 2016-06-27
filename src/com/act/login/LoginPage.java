@@ -138,33 +138,30 @@ public class LoginPage extends VerticalLayout {
 		email = new TextField("Email");
 		password = new PasswordField("Password");
 		
-		email.setWidth(100, Unit.PERCENTAGE);
-		password.setWidth(100, Unit.PERCENTAGE);
+		email.setWidth(60, Unit.PERCENTAGE);
+		password.setWidth(60, Unit.PERCENTAGE);
 		
 		form.addComponent(email);
 		form.addComponent(password);
+		form.setWidth(null);
 		
 		//----------------------------------------------
 		
 		HorizontalLayout buttonLayout = new HorizontalLayout();
 		buttonLayout.setHeight(null);
-		buttonLayout.setWidth(73, Unit.PERCENTAGE);
+		buttonLayout.setWidth(209, Unit.PIXELS);
 		buttonLayout.setSpacing(true);
 		Button login = new Button("Login");
-		Button register = new Button("Register");
-		register.setWidth(null);
-		login.setWidth(100, Unit.PERCENTAGE);
-		buttonLayout.addComponent(register);
+		login.setWidth(null);
 		buttonLayout.addComponent(login);
 		//--------------------------------------------------		
 		login.addStyleName(ValoTheme.BUTTON_PRIMARY);
 		//--------------------------------------------------
-		
+		form.addComponent(login);
 		addComponent(form);
-		addComponent(buttonLayout);
+
 		setExpandRatio(form, 1.0f);
-		setExpandRatio(buttonLayout, 0.0f);
-		setComponentAlignment(buttonLayout, Alignment.MIDDLE_RIGHT);
+
 		
 		//--------------------------------------------------
 		
