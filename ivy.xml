@@ -54,6 +54,7 @@
 
 		<dependency org="org.apache.commons" name="commons-lang3" rev="3.4"/>
 
-
+		<dependency org="org.vaadin.addon" name="confirmdialog" rev="2.1.3" />
+		
 	</dependencies>
 </ivy-module>

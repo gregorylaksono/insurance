@@ -111,7 +111,7 @@ public class LoginPage extends VerticalLayout {
 
 				@Override
 				public void handleError(String statusCode) {
-					// TODO Auto-generated method stub
+					Notification.show("User name/password is not found", Type.ERROR_MESSAGE);
 					
 				}
 
@@ -216,8 +216,8 @@ public class LoginPage extends VerticalLayout {
 				
 			}
 		};
-//		new CallSOAPAction(param, "getCommodityByCreatorId", callback);
-		new CallJSONAction("getCommodityByCreatorId", param, jsonCallback);
+		new CallSOAPAction(param, "getCommodityByCreatorId", callback);
+//		new CallJSONAction("getCommodityByCreatorId", param, jsonCallback);
 
 	}
 

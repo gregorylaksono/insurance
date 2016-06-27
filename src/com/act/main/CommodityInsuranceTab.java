@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.ksoap2.serialization.SoapObject;
+import org.vaadin.dialogs.ConfirmDialog;
 
 import com.act.insurance.InsuranceUI;
 import com.act.insurance.model.User;
@@ -91,6 +92,40 @@ public class CommodityInsuranceTab extends VerticalLayout {
 		
 	};
 	
+	private ClickListener deleteInsuranceListener = new ClickListener(){
+
+		@Override
+		public void buttonClick(ClickEvent event) {
+			ConfirmDialog.show(UI.getCurrent(), "Please Confirm:", "Delete this insurance?",
+			        "Delete", "Cancel", new ConfirmDialog.Listener() {
+					
+			            public void onClose(ConfirmDialog dialog) {
+			                if (dialog.isConfirmed()) {
+			                	User user  = ((InsuranceUI)UI.getCurrent()).getUser();
+			                	LinkedHashMap<String, Object> param = new LinkedHashMap<>();
+			                	param.put("insuranceId", insuranceList.getValue());
+			                	param.put("sessionId", user.getSessionId());
+			                	ISOAPResultCallBack callback = new ISOAPResultCallBack() {
+									
+									@Override
+									public void handleResult(SoapObject data, String StatusCode) {
+										insuranceList.removeItem(insuranceList.getValue());
+									}
+									
+									@Override
+									public void handleError(String StatusCode) {
+										Notification.show("Error", "Insurance cannot be deleted because of certain reasons", Type.ERROR_MESSAGE);
+									}
+								};
+			    				new CallSOAPAction(param, "deleteCommodityInsurance", callback);
+			                } else {
+			                    
+			                }
+			            }
+			        });
+		}
+		
+	};
 	private Panel commodityPanel;
 	private Table insuranceList;
 	private Table countryList;
@@ -192,16 +227,20 @@ public class CommodityInsuranceTab extends VerticalLayout {
 				String val = ruleList.get(args[2]);
 				String[] array = val.split("\\|");
 				String code = array[2];
+				String name = array[1];
 				String value = null;
 				if(array.length > 4){
-					String flag = array[5];
+					String flag = array[4];
 					if(flag.equals("e")){
-						value = area+"|"+code+"|"+isIncl+"|"+"e";											
+						value = area+"|"+name+"|"+code+"|"+isIncl+"|"+"e";											
+					}
+					else{
+						value = area+"|"+name+"|"+code+"|"+isIncl+"|"+"n";
 					}
 				}else{
-					value = area+"|"+code+"|"+isIncl+"|"+"n";
+					value = area+"|"+name+"|"+code+"|"+isIncl+"|"+"n";
 				}
-				ruleList.put(val, value);
+				ruleList.put(code, value);
 				
 			}
 		});
@@ -512,9 +551,14 @@ public class CommodityInsuranceTab extends VerticalLayout {
 		addNew.addStyleName(ValoTheme.BUTTON_PRIMARY);
 		addNew.addClickListener(newCommodityInsuranceListener);
 		//----------------------------------------
+		Button delete = new Button("Delete");
+		delete.addStyleName(ValoTheme.BUTTON_DANGER);
+		delete.addClickListener(deleteInsuranceListener );
+		//----------------------------------------
 		layout.addComponent(searchText);
 		layout.addComponent(insuranceList);
 		layout.addComponent(addNew);
+		//----------------------------------------
 		layout.setExpandRatio(searchText, 0.0f);
 		layout.setExpandRatio(addNew, 0.0f);
 		layout.setExpandRatio(insuranceList, 1.0f);
@@ -549,7 +593,7 @@ public class CommodityInsuranceTab extends VerticalLayout {
 					String validFrom = parent.getProperty("validFrom") == null ? "":parent.getProperty("validFrom").toString();
 					String validUntil = parent.getProperty("validUntil") == null ? "":parent.getProperty("validUntil").toString();
 
-					Item item =insuranceList.addItem(insuranceId);
+					Item item = insuranceList.addItem(insuranceId);
 					item.getItemProperty(ITEM_LIST_ID).setValue(insuranceId);
 					item.getItemProperty(ITEM_VALID_FROM_VALUE).setValue(validFrom);
 					item.getItemProperty(ITEM_VALID_TO_VALUE).setValue(validUntil);
@@ -575,10 +619,10 @@ public class CommodityInsuranceTab extends VerticalLayout {
 
 	}
 
-	public void reloadRuleTable(String value) {
+	public void reloadRuleTable(String value, String isEnable) {
 		String[] args = value.split("\\|");
 		//area+"|"+name+"|"+code+"|"+"1";
-		insertItemToCountryList(value, args[1], args[0], "0");
+		insertItemToCountryList(value, args[1], args[0], isEnable);
 		ruleList.put(args[2], value);
 	}
 	

@@ -15,7 +15,7 @@ import org.xmlpull.v1.XmlPullParserException;
 public class CallSOAPAction {
 	private String method_name;
 	private LinkedHashMap<String, Object> param;
-	private String url = "http://localhost:8080/WEBSERVICE/services/MobileService?wsdl";
+	private String url = "http://localhost:81/WEBSERVICE/services/MobileService?wsdl";
 	private ISOAPResultCallBack callBack;
 	public static final String NAMESPACE = "http://service.act.de";
 	public static final String SUCCESS_CODE = "00:success";

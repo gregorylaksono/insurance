@@ -56,8 +56,9 @@ public class RulesPage extends Window{
 			String area = (String) areaOptions.getValue();
 			String name = cb.getItemCaption(code);
 			//"a|"+ar.getAr_name()+"|"+base.getRAr().getArCode()+"|"+base.getRAr().getArBool();
-			String value = area+"|"+name+"|"+code+"|"+"1";
-			commodityInsurance.reloadRuleTable(value);
+			String enable = "1";
+			String value = area+"|"+name+"|"+code+"|"+enable+"|"+"n";
+			commodityInsurance.reloadRuleTable(value, enable);
 			UI.getCurrent().removeWindow(RulesPage.this);
 		}
 		
