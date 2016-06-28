@@ -14,6 +14,7 @@ public class Utils {
 	
 	public static String getWebserviceURL(){
 		String url = load("webservice.url");
+		System.out.println("Access web service on "+url);
 		return url;
 	}
 
@@ -21,7 +22,7 @@ public class Utils {
 		Properties prop = new Properties();
 		String value = null;
 		try {
-			InputStream input = Utils.class.getResourceAsStream("/config.properties");;
+			InputStream input = Utils.class.getResourceAsStream("/com/resource/config.properties");;
 			prop.load(input);
 			value = prop.getProperty(string);
 		} catch (FileNotFoundException e) {
