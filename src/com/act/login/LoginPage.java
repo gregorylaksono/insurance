@@ -16,6 +16,7 @@ import com.act.main.Main;
 import com.act.main.UserHeaderComponent;
 import com.act.util.CallJSONAction;
 import com.act.util.CallSOAPAction;
+import com.act.util.NotificationThread;
 import com.act.util.CallJSONAction.IJSonCallbackListener;
 import com.act.util.CallSOAPAction.ISOAPResultCallBack;
 import com.vaadin.data.Item;
@@ -34,6 +35,7 @@ import com.vaadin.ui.Button;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.FormLayout;
 import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.Label;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Notification.Type;
 import com.vaadin.ui.PasswordField;
@@ -73,21 +75,26 @@ public class LoginPage extends VerticalLayout {
 
 				public void handleResult(SoapObject data,  String StatusCode) {
 					String sessionId = data.getProperty("sessionId").toString();
-					String firstname = data.getProperty("firstname").toString();
-					String familyname= data.getProperty("familyname").toString();
-					String username= data.getProperty("username").toString();
+					String ca_id = data.getProperty("ca_id").toString();
+					String ap_3lc= data.getProperty("ap_3lc").toString();
+					String userId = data.getProperty("userId").toString();
 					String sAddId= data.getProperty("addId").toString();
 					Integer addId = Integer.parseInt(sAddId);
 					
 					User user = new User();
 					user.setSessionId(sessionId);
-					user.setFirstname(firstname);
-					user.setFamilyname(familyname);
-					user.setUsername(username);
+					user.setAp_3lc(ca_id);
+					user.setCa_id(ap_3lc);
 					user.setAddId(addId);
+					user.setUserId(userId);	
 					
+//					new NotificationThread("Login is success", Type.HUMANIZED_MESSAGE).start();
 					((InsuranceUI)UI.getCurrent()).setUser(user);
-					initCommodities();
+//					new NotificationThread("Please wait. While loading commodities...", Type.HUMANIZED_MESSAGE).start();
+					((InsuranceUI)UI.getCurrent()).initCommodities();
+//					new NotificationThread("Please wait. While loading currencies...", Type.HUMANIZED_MESSAGE).start();
+					((InsuranceUI)UI.getCurrent()).initCurrencies();
+//					new NotificationThread("Finish", Type.HUMANIZED_MESSAGE).start();
 					
 					Component userProfile = new UserHeaderComponent();
 					((InsuranceUI)UI.getCurrent()).setHeader(userProfile);
@@ -126,6 +133,8 @@ public class LoginPage extends VerticalLayout {
 
 	private TextField email;
 	
+	private Label utilLabel;
+	
 	public LoginPage(){
 		setHeight(120, Unit.PIXELS);
 		setWidth(300, Unit.PIXELS);
@@ -141,6 +150,9 @@ public class LoginPage extends VerticalLayout {
 		email.setWidth(60, Unit.PERCENTAGE);
 		password.setWidth(60, Unit.PERCENTAGE);
 		
+		utilLabel = new Label();
+		
+		form.addComponent(utilLabel);
 		form.addComponent(email);
 		form.addComponent(password);
 		form.setWidth(null);
@@ -168,54 +180,6 @@ public class LoginPage extends VerticalLayout {
 		login.addClickListener(loginListener);
 
 	}
-	private void initCommodities() {
-		String sessionId = ((InsuranceUI)UI.getCurrent()).getUser().getSessionId();
-		String match = "*";
-		LinkedHashMap<String, Object> param = new LinkedHashMap<String, Object>();
-		param.put("sessionId", sessionId);
-		
-		ISOAPResultCallBack callback = new ISOAPResultCallBack() {
-			
-			@Override
-			public void handleResult(SoapObject data, String StatusCode) {
-				List commodityList = new ArrayList();
-				for(int i=0; i<data.getPropertyCount(); i++){
-					String value  =  data.getProperty(i).toString();
-					String[] args = value.split("\\|");
-					commodityList.add(value);
-				}
-				((InsuranceUI)UI.getCurrent()).setCommodityList(commodityList);
-				
-			}
-			
-			@Override
-			public void handleError(String StatusCode) {
-				// TODO Auto-generated method stub
-				
-			}
-		};
-		
-		IJSonCallbackListener jsonCallback = new IJSonCallbackListener() {
-			
-			@Override
-			public void handleData(Map<String, Object> values) {
-				List commodityList = new ArrayList();
-				List datas = (List) values.get("data");
-				for(Object d : datas){
-					JSONObject obj = (JSONObject) d;
-					String value = (String) obj.get("$");
-					
-					String[] args = value.split("\\|");
-					commodityList.add(value);
-				}
-				((InsuranceUI)UI.getCurrent()).setCommodityList(commodityList);
-				
-				
-			}
-		};
-		new CallSOAPAction(param, "getCommodityByCreatorId", callback);
-//		new CallJSONAction("getCommodityByCreatorId", param, jsonCallback);
 
-	}
 
 }

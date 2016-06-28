@@ -21,8 +21,13 @@ import com.act.util.Factory;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.vaadin.data.Item;
+import com.vaadin.data.Container.Filter;
+import com.vaadin.data.Container.Filterable;
 import com.vaadin.data.Property.ValueChangeListener;
+import com.vaadin.data.util.filter.Like;
 import com.vaadin.event.ItemClickEvent;
+import com.vaadin.event.FieldEvents.TextChangeEvent;
+import com.vaadin.event.FieldEvents.TextChangeListener;
 import com.vaadin.event.ItemClickEvent.ItemClickListener;
 import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.shared.ui.label.ContentMode;
@@ -334,6 +339,12 @@ public class CommodityInsuranceTab extends VerticalLayout {
 		final DateField validUntilDate = new DateField("Valid until");
 		Button ruleButton = new Button("Add rules...");
 		//---------------------------------------		
+		minValueText.setWidth(120, Unit.PIXELS);
+		currencyText.setWidth(120, Unit.PIXELS);
+		rateText.setWidth(120, Unit.PIXELS);
+		validFromDate.setWidth(120, Unit.PIXELS);
+		validUntilDate.setWidth(120, Unit.PIXELS);
+		//---------------------------------------		
 		comNameText.setRequired(true);
 		minValueText.setRequired(true);
 		currencyText.setRequired(true);
@@ -441,6 +452,10 @@ public class CommodityInsuranceTab extends VerticalLayout {
 				String validFrom = null;
 				String validTo = null;
 				DateFormat format = new SimpleDateFormat("M/d/yyyy");
+				if(commId.isEmpty() ||minValue.isEmpty() || currency.isEmpty() || rateValue.isEmpty()){
+					Notification.show("Please input all required fields", Type.ERROR_MESSAGE);
+					return;
+				}
 				if(fromValidDateValue != null){
 					validFrom = format.format(fromValidDateValue);					
 				}
@@ -466,7 +481,9 @@ public class CommodityInsuranceTab extends VerticalLayout {
 					@Override
 					public void handleResult(SoapObject data, String statusCode) {
 						initList(insuranceList);
-						Notification.show("Changes is saved", Type.TRAY_NOTIFICATION);
+						Notification.show("Changes is saved", Type.ASSISTIVE_NOTIFICATION);
+						VerticalLayout root = Factory.getVerticalLayoutTemplateFull();
+						commodityPanel.setContent(root);
 					}
 					
 					@Override
@@ -509,9 +526,10 @@ public class CommodityInsuranceTab extends VerticalLayout {
 	}
 
 	private void initCurrency(ComboBox currencyText) {
-		currencyText.addItem("USD");
-		currencyText.addItem("EUR");
-		currencyText.addItem("Rp");
+		List<String> list = ((InsuranceUI)UI.getCurrent()).getCurrencyList();
+		for(String s : list){
+			currencyText.addItem(s);
+		}
 		
 	}
 
@@ -552,6 +570,18 @@ public class CommodityInsuranceTab extends VerticalLayout {
 		insuranceList.addContainerProperty(ITEM_VALID_FROM_VALUE, String.class, null);
 		insuranceList.addContainerProperty(ITEM_VALID_TO_VALUE, String.class, null);
 		insuranceList.addItemClickListener(commoditySelectListener );
+		searchText.addTextChangeListener(new TextChangeListener() {
+			Filter filter = null;
+			@Override
+			public void textChange(TextChangeEvent event) {
+				Filterable f = (Filterable)		insuranceList.getContainerDataSource();
+				// Remove old filter
+                if (filter != null)
+                    f.removeContainerFilter(filter);
+                filter = new Like(ITEM_LIST_NAME, "%"+event.getText());
+                f.addContainerFilter(filter);
+			}
+		});
 		initList(insuranceList);
 		insuranceList.setWidth(100, Unit.PERCENTAGE);
 		insuranceList.setHeight(100, Unit.PERCENTAGE);

@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.log4j.Logger;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.ksoap2.serialization.SoapObject;
@@ -17,8 +18,13 @@ import com.act.util.CallJSONAction.IJSonCallbackListener;
 import com.act.util.CallSOAPAction;
 import com.act.util.Factory;
 import com.act.util.CallSOAPAction.ISOAPResultCallBack;
+import com.vaadin.data.Container.Filter;
+import com.vaadin.data.Container.Filterable;
 import com.vaadin.data.Item;
+import com.vaadin.data.util.filter.Like;
 import com.vaadin.event.ItemClickEvent;
+import com.vaadin.event.FieldEvents.TextChangeEvent;
+import com.vaadin.event.FieldEvents.TextChangeListener;
 import com.vaadin.event.ItemClickEvent.ItemClickListener;
 import com.vaadin.server.Sizeable.Unit;
 import com.vaadin.shared.ui.MarginInfo;
@@ -49,6 +55,7 @@ public class CommodityTab extends VerticalLayout {
 	 * 
 	 */
 	private static final long serialVersionUID = 747292357566822421L;
+	private final Logger logger = Logger.getLogger(CommodityTab.class);
 	private Panel commodityPanel;
 	
 	protected static final String COMMODITY_LIST_PARENT = "parent";
@@ -159,6 +166,19 @@ public class CommodityTab extends VerticalLayout {
 		list.addContainerProperty(COMMODITY_LIST_PARENT, String.class, null);
 		list.addContainerProperty(COMMODITY_LIST_VAD, String.class, null);
 		
+		searchText.addTextChangeListener(new TextChangeListener() {
+			Filter filter = null;
+			@Override
+			public void textChange(TextChangeEvent event) {
+				Filterable f = (Filterable)list.getContainerDataSource();
+				// Remove old filter
+                if (filter != null)
+                    f.removeContainerFilter(filter);
+                filter = new Like(COMMODITY_LIST_NAME, "%"+event.getText());
+                f.addContainerFilter(filter);
+			}
+		});
+		
 		list.setVisibleColumns(COMMODITY_LIST_NAME);
 		list.addItemClickListener(commoditySelectListener );
 		initList();
@@ -183,23 +203,29 @@ public class CommodityTab extends VerticalLayout {
 	}
 
 	private void initList() {
-		String sessionId = ((InsuranceUI)UI.getCurrent()).getUser().getSessionId();
-		String match = "*";
-		
+		list.removeAllItems();
 		List<String> comList = ((InsuranceUI)UI.getCurrent()).getCommodityList();
-		for(String value : comList){
-			String[] args = value.split("\\|");
-			Item item = list.addItem(args[1]);
-			item.getItemProperty(COMMODITY_LIST_ID).setValue(args[1]);
-			item.getItemProperty(COMMODITY_LIST_NAME).setValue(args[2]);
-			item.getItemProperty(COMMODITY_LIST_PARENT).setValue(args[4]);
-			item.getItemProperty(COMMODITY_LIST_VAD).setValue(args[5]);
-			commodityList.add(value);
+		String val = null;
+		int index = 0;
+		try{			
+			for(String value : comList){
+				val = value;
+				
+				String[] args = value.split("\\|");
+				Item item = list.addItem(args[1]);
+				item.getItemProperty(COMMODITY_LIST_ID).setValue(args[1]);
+				item.getItemProperty(COMMODITY_LIST_NAME).setValue(args[2]);
+				item.getItemProperty(COMMODITY_LIST_PARENT).setValue(args[4]);
+				item.getItemProperty(COMMODITY_LIST_VAD).setValue(args[5]);
+				commodityList.add(value);
+				index++;
+			}
+		}catch(Exception e){
+			logger.error("Error at index:"+index+", and value: "+val);
 		}
-		
-		
 
 	}
+	
 	private Component createCommodityForm(String selected, String name) {
 		VerticalLayout layout = new VerticalLayout();
 		layout.setSizeFull();
@@ -284,7 +310,9 @@ public class CommodityTab extends VerticalLayout {
 			public void handleResult(SoapObject data, String StatusCode) {
 				if(StatusCode.equals(CallSOAPAction.SUCCESS_CODE)){
 					Notification.show("Commodity is updated", Type.HUMANIZED_MESSAGE);
-					initList();							
+					initList();				
+					VerticalLayout root = Factory.getVerticalLayoutTemplateFull();
+					commodityPanel.setContent(root);
 				}
 			}
 			
@@ -308,7 +336,9 @@ public class CommodityTab extends VerticalLayout {
 			@Override
 			public void handleResult(SoapObject data, String StatusCode) {
 				if(StatusCode.equals(CallSOAPAction.SUCCESS_CODE)){
-					initList();							
+					initList();			
+					VerticalLayout root = Factory.getVerticalLayoutTemplateFull();
+					commodityPanel.setContent(root);
 				}
 			}
 			

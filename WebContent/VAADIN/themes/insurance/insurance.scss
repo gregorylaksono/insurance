@@ -45,4 +45,8 @@ $v-font-size: 14px;
 *:focus {
     outline: none;
 }
+.v-button:focus:after{
+	box-shadow:none !important;
+	-webkit-box-shadow:none !important;
+}
 }

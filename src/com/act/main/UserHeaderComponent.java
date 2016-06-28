@@ -48,8 +48,8 @@ public class UserHeaderComponent extends VerticalLayout{
 		layout.setHeight(50, Unit.PIXELS);
 		layout.setSpacing(false);
 		
-		Label name = new Label("<b>"+user.getFirstname()+" "+user.getFamilyname()+"</b>");
-		Label username = new Label("<i>"+user.getUsername()+"</i>");
+		Label name = new Label("<b>"+user.getAp_3lc()+"</b>");
+		Label username = new Label("<i>"+user.getUserId()+"</i>");
 		username.setHeight(null);
 		name.setHeight(100, Unit.PERCENTAGE);
 		

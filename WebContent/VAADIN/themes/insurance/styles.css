@@ -12952,3 +12952,8 @@ div.v-layout.v-horizontal.v-widget {
 .insurance *:focus {
 	outline: none;
 }
+
+.insurance .v-button:focus:after {
+	box-shadow: none !important;
+	-webkit-box-shadow: none !important;
+}

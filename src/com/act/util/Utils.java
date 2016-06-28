@@ -6,7 +6,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
+import org.apache.log4j.Logger;
+
 public class Utils {
+	final static Logger logger = Logger.getLogger(Utils.class);
 	public static String checkNull(Object s){
 		if(s == null)return "";
 		else return s.toString();
@@ -14,7 +17,6 @@ public class Utils {
 	
 	public static String getWebserviceURL(){
 		String url = load("webservice.url");
-		System.out.println("Access web service on "+url);
 		return url;
 	}
 
